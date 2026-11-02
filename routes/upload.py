@@ -29,9 +29,10 @@ def allowed_file(filename: str) -> bool:
 
 def check_password(password: str) -> bool:
     """Check if provided password matches configured password."""
+    import hmac
     if config.UPLOAD_PASSWORD is None:
         return True  # No password required
-    return password == config.UPLOAD_PASSWORD
+    return hmac.compare_digest(password, config.UPLOAD_PASSWORD)
 
 
 @upload_bp.route("/api/upload", methods=["POST"])
@@ -101,6 +102,10 @@ def upload_file():
         
         filename = secure_filename(file.filename)
         
+        # Handle empty filename after sanitization
+        if not filename:
+            filename = "upload"
+        
         # Check if file type is allowed
         if not allowed_file(filename):
             failed.append({
@@ -122,26 +127,36 @@ def upload_file():
             })
             continue
         
-        # Save file
+        # Save file with atomic naming to avoid race conditions
+        base, ext = os.path.splitext(filename)
         filepath = os.path.join(target_dir, filename)
+        counter = 1
         
-        # Check if file already exists
-        if os.path.exists(filepath):
-            # Add number suffix
-            base, ext = os.path.splitext(filename)
-            counter = 1
-            while os.path.exists(filepath):
+        # Try to save with original name, then with numbered suffixes
+        while counter < 1000:  # Safety limit
+            try:
+                # Open file with exclusive creation flag to prevent race
+                fd = os.open(filepath, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o644)
+                os.close(fd)
+                # Now save to this guaranteed-unique path
+                file.save(filepath)
+                uploaded.append(filename)
+                break
+            except FileExistsError:
+                # File was created between check and creation, try next number
                 filename = f"{base}_{counter}{ext}"
                 filepath = os.path.join(target_dir, filename)
                 counter += 1
-        
-        try:
-            file.save(filepath)
-            uploaded.append(filename)
-        except Exception as e:
+            except Exception as e:
+                failed.append({
+                    "name": file.filename,
+                    "error": "Upload failed"
+                })
+                break
+        else:
             failed.append({
                 "name": file.filename,
-                "error": str(e)
+                "error": "Could not find unique filename"
             })
     
     success = len(uploaded) > 0

@@ -66,7 +66,7 @@ def create_folder():
     # Security: Resolve path safely
     try:
         parent_dir = safe_join(config.MEDIA_ROOT, parent_path)
-    except:
+    except (ValueError, OSError):
         return jsonify({
             "success": False,
             "message": "Invalid parent path."
@@ -91,7 +91,7 @@ def create_folder():
     
     # Create folder
     try:
-        os.makedirs(new_folder_path)
+        os.mkdir(new_folder_path)  # Use mkdir instead of makedirs for single-level creation
         return jsonify({
             "success": True,
             "message": f"Folder '{folder_name}' created successfully."
@@ -103,8 +103,8 @@ def create_folder():
             "message": "Permission denied."
         }), 403
     
-    except Exception as e:
+    except Exception:
         return jsonify({
             "success": False,
-            "message": f"Error: {str(e)}"
+            "message": "Folder creation failed."
         }), 500

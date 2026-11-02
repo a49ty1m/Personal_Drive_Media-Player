@@ -44,15 +44,16 @@ def get_local_ip() -> str:
     Works on Android/Termux and standard Linux.
     Falls back to 127.0.0.1 if detection fails.
     """
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     try:
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         s.settimeout(2)
         s.connect(("8.8.8.8", 80))
         ip = s.getsockname()[0]
-        s.close()
         return ip
     except Exception:
         return "127.0.0.1"
+    finally:
+        s.close()
 
 
 # ============================================================
@@ -188,6 +189,7 @@ def create_app():
     from routes.upload   import upload_bp
     from routes.delete   import delete_bp
     from routes.folder   import folder_bp
+    from routes.rename   import rename_bp
 
     _base = os.path.dirname(os.path.abspath(__file__))
 
@@ -206,6 +208,7 @@ def create_app():
     app.register_blueprint(upload_bp)
     app.register_blueprint(delete_bp)
     app.register_blueprint(folder_bp)
+    app.register_blueprint(rename_bp)
 
     # ---- Catch-all: redirect unknown URLs to the browser ----
     @app.errorhandler(404)

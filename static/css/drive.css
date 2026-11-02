@@ -61,6 +61,7 @@
     display: flex;
     flex-direction: column;
     gap: 5px;
+    overflow: visible;
 }
 
 .file-item {
@@ -73,6 +74,7 @@
     background: transparent;
     border-radius: 8px;
     z-index: 1;
+    overflow: visible;
 }
 
 .file-item:hover {
@@ -146,21 +148,34 @@
 
 .dropdown-menu {
     display: none;
-    position: absolute;
-    right: 0;
-    top: calc(100% + 2px);
+    position: fixed;
     background: white;
     border: 1px solid #ddd;
     border-radius: 8px;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
     min-width: 180px;
     z-index: 9999;
-    margin-top: 5px;
 }
 
 .dropdown-menu.show {
     display: block;
     animation: slideDown 0.2s ease-out;
+}
+
+/* Smart positioning classes are now handled via JS with fixed positioning */
+.dropdown-menu.open-up.show {
+    animation: slideUp 0.2s ease-out;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 @keyframes slideDown {
@@ -221,6 +236,7 @@
     flex-direction: column;
     gap: 5px;
     margin-bottom: 30px;
+    overflow: visible;
 }
 
 .folder-row {
@@ -233,6 +249,7 @@
     transition: background 0.2s;
     gap: 10px;
     z-index: 1;
+    overflow: visible;
 }
 
 .folder-row:hover {

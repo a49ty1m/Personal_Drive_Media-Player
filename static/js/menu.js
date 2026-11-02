@@ -22,22 +22,80 @@ function clickFile(fileId) {
 }
 
 /**
- * Toggle dropdown menu
+ * Toggle dropdown menu with smart positioning
  */
 function toggleMenu(event, fileId) {
     event.stopPropagation();
     const menuId = 'menu-' + fileId;
     const menu = document.getElementById(menuId);
+    const button = event.currentTarget;
     
     // Close all other menus
     document.querySelectorAll('.dropdown-menu').forEach(m => {
         if (m.id !== menuId) {
             m.classList.remove('show');
+            m.classList.remove('open-up');
+            m.classList.remove('open-left');
         }
     });
     
     // Toggle current menu
+    const isOpening = !menu.classList.contains('show');
     menu.classList.toggle('show');
+    
+    if (isOpening) {
+        // Reset positioning classes
+        menu.classList.remove('open-up');
+        menu.classList.remove('open-left');
+        
+        // Force a reflow to ensure menu is rendered
+        menu.offsetHeight;
+        
+        // Position menu immediately
+        positionMenu(menu, button);
+    }
+}
+
+/**
+ * Smart positioning: adjust menu position to stay on screen
+ */
+function positionMenu(menu, button) {
+    const buttonRect = button.getBoundingClientRect();
+    const viewportHeight = window.innerHeight;
+    const viewportWidth = window.innerWidth;
+    
+    // Initially position menu next to button (to the left of the button)
+    menu.style.left = (buttonRect.left - 180) + 'px'; // 180px = menu width
+    menu.style.top = (buttonRect.bottom + 5) + 'px';
+    
+    // Force reflow to get accurate measurements
+    const menuRect = menu.getBoundingClientRect();
+    
+    // Add some padding from edges
+    const padding = 20;
+    
+    // Check vertical position
+    const menuBottom = buttonRect.bottom + menuRect.height + padding;
+    const spaceAbove = buttonRect.top;
+    
+    if (menuBottom > viewportHeight && spaceAbove > menuRect.height + padding) {
+        // Not enough space below, open upward
+        menu.style.top = (buttonRect.top - menuRect.height - 5) + 'px';
+        menu.classList.add('open-up');
+    } else {
+        menu.style.top = (buttonRect.bottom + 5) + 'px';
+    }
+    
+    // Check horizontal position - keep menu to the left of button
+    const menuLeft = buttonRect.left - menuRect.width;
+    
+    if (menuLeft < padding) {
+        // Not enough space on left, show to the right of button
+        menu.style.left = (buttonRect.right + 5) + 'px';
+        menu.classList.add('open-right');
+    } else {
+        menu.style.left = (buttonRect.left - menuRect.width) + 'px';
+    }
 }
 
 /**
@@ -46,6 +104,8 @@ function toggleMenu(event, fileId) {
 function closeMenu() {
     document.querySelectorAll('.dropdown-menu').forEach(menu => {
         menu.classList.remove('show');
+        menu.classList.remove('open-up');
+        menu.classList.remove('open-left');
     });
 }
 
@@ -57,14 +117,6 @@ document.addEventListener('click', function(event) {
         closeMenu();
     }
 });
-
-/**
- * Open file (for videos)
- */
-function openFile(url) {
-    closeMenu();
-    window.location.href = url;
-}
 
 /**
  * Open folder
@@ -248,13 +300,6 @@ async function previewText(path) {
 }
 
 /**
- * Preview PDF (legacy - use previewPDFWithFallback instead)
- */
-function previewPDF(path) {
-    previewPDFWithFallback(path);
-}
-
-/**
  * Preview audio
  */
 function previewAudio(path) {
@@ -286,22 +331,11 @@ function createPreviewModal(filename, isPDF = false) {
     const modal = document.createElement('div');
     modal.className = 'modal preview-modal';
     
-    // Add zoom controls for PDF
-    const zoomControls = isPDF ? `
-        <div class="pdf-zoom-controls">
-            <button class="zoom-btn" onclick="zoomOutPDF()" title="Zoom Out">🔍−</button>
-            <span id="pdf-zoom-level" class="zoom-level">100%</span>
-            <button class="zoom-btn" onclick="zoomInPDF()" title="Zoom In">🔍+</button>
-            <button class="zoom-btn" onclick="resetPDFZoom()" title="Reset Zoom">⟲</button>
-        </div>
-    ` : '';
-    
     modal.innerHTML = `
         <div class="modal-content">
             <div class="modal-header">
                 <h2>📄 ${escapeHtml(filename)}</h2>
                 <div class="modal-header-actions">
-                    ${zoomControls}
                     <button class="preview-download-btn" onclick="downloadCurrentPreview()">⬇️ Download</button>
                     <button class="modal-close" onclick="closePreviewModal()">&times;</button>
                 </div>
@@ -339,8 +373,6 @@ function closePreviewModal() {
         modal.classList.remove('show');
         setTimeout(() => modal.remove(), 300);
     }
-    // Reset PDF zoom level
-    pdfZoomLevel = 100;
 }
 
 /**

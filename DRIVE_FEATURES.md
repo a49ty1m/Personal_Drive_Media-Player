@@ -47,7 +47,7 @@ Your media server has been upgraded to a full-featured personal cloud drive!
 ### 4. **File Preview System**
 - ✅ Preview images (JPG, PNG, GIF, WebP, SVG, BMP, ICO)
 - ✅ Preview text files with syntax highlighting (TXT, MD, JSON, XML, CSV, code files)
-- ✅ Preview PDFs with zoom controls (50% - 300%)
+- ✅ Preview PDFs with embedded viewer
 - ✅ Preview audio files with built-in player (MP3, WAV, OGG, M4A, FLAC)
 - ✅ Dark-themed preview modal
 - ✅ Download button in every preview (left of close button)
@@ -57,27 +57,34 @@ Your media server has been upgraded to a full-featured personal cloud drive!
 - ✅ Press Escape to close preview
 - ✅ Click outside modal to close
 
-### 5. **PDF Viewer Features**
-- ✅ Zoom In (🔍+) - Increase by 25%
-- ✅ Zoom Out (🔍−) - Decrease by 25%
-- ✅ Reset Zoom (⟲) - Return to 100%
-- ✅ Live zoom percentage display (e.g., "125%")
-- ✅ Smooth zoom transitions
-- ✅ Zoom range: 50% to 300%
-- ✅ Auto-reset to 100% on close
-- ✅ Zoom controls only shown for PDFs (not images)
+### 5. **Rename Features**
+- ✅ Rename files and folders
+- ✅ Accessible via 3-dot menu (⋮)
+- ✅ Input validation (no special characters)
+- ✅ Pre-fills current name
+- ✅ Auto-selects filename without extension
+- ✅ Keyboard shortcuts (Enter/Escape)
+- ✅ Prevents duplicate names
+- ✅ Click outside modal to close
 
-### 6. **3-Dot Menu System**
+### 6. **PDF Viewer Features**
+- ✅ Embedded PDF preview using browser's native PDF viewer
+- ✅ Download button available
+- ✅ Fallback to direct download if preview fails
+- ✅ Auto-close when clicking outside modal
+
+### 7. **3-Dot Menu System**
 - ✅ Clean context menu (⋮) for file/folder actions
-- ✅ Download option
-- ✅ Delete option with confirmation
 - ✅ Open option for folders
+- ✅ Download option for files
+- ✅ Rename option (✏️)
+- ✅ Delete option with confirmation
 - ✅ Prevents accidental actions
 - ✅ High z-index to prevent overlapping
 - ✅ Auto-close when clicking outside
 - ✅ Smooth animations
 
-### 7. **Enhanced File Browser**
+### 8. **Enhanced File Browser**
 - ✅ View ALL file types (documents, images, archives, code, etc.)
 - ✅ File type icons (🎬 videos, 📄 documents, 🖼️ images, 🎵 audio, etc.)
 - ✅ File size display (KB, MB, GB)
@@ -350,9 +357,8 @@ Your personal drive now includes:
 3. ✅ **Delete** - Files and folders with confirmation
 4. ✅ **Create Folders** - With name validation
 5. ✅ **Preview** - Images, text, PDFs, audio
-6. ✅ **PDF Zoom** - 50% to 300% with controls
-7. ✅ **3-Dot Menu** - Clean action menu
-8. ✅ **Dark Theme** - Modern dark interface
+6. ✅ **3-Dot Menu** - Clean action menu
+7. ✅ **Dark Theme** - Modern dark interface
 9. ✅ **File Icons** - Visual file type identification
 10. ✅ **File Sizes** - Human-readable display
 11. ✅ **Security** - Password protection, path validation

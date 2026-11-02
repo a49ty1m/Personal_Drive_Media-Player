@@ -28,17 +28,17 @@ async function createFolder() {
     const folderName = input.value.trim();
     
     if (!folderName) {
-        showNotification('Please enter a folder name', 'error');
+        alert('Please enter a folder name');
         return;
     }
     
     // Validate folder name (no special characters that could cause issues)
     if (!/^[a-zA-Z0-9_\-\.\s]+$/.test(folderName)) {
-        showNotification('Folder name contains invalid characters', 'error');
+        alert('Folder name contains invalid characters');
         return;
     }
     
-    const currentPath = new URLSearchParams(window.location.search).get('path') || '/';
+    const currentPath = document.body.dataset.currentPath || '/';
     
     try {
         const response = await fetch('/api/folder/create', {
@@ -55,7 +55,7 @@ async function createFolder() {
         const data = await response.json();
         
         if (response.ok) {
-            showNotification(data.message || 'Folder created successfully', 'success');
+            alert(data.message || 'Folder created successfully');
             closeFolderModal();
             
             // Reload page to show new folder
@@ -63,11 +63,11 @@ async function createFolder() {
                 window.location.reload();
             }, 500);
         } else {
-            showNotification(data.error || 'Failed to create folder', 'error');
+            alert(data.message || 'Failed to create folder');
         }
     } catch (error) {
         console.error('Error creating folder:', error);
-        showNotification('Network error while creating folder', 'error');
+        alert('Network error while creating folder');
     }
 }
 

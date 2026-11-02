@@ -115,11 +115,24 @@ function handleFiles(files) {
     Array.from(files).forEach((file, index) => {
         const fileItem = document.createElement('div');
         fileItem.className = 'file-item-upload';
-        fileItem.innerHTML = `
-            <span class="file-icon">📎</span>
-            <span class="file-name">${file.name}</span>
-            <span class="file-size">${formatFileSize(file.size)}</span>
-        `;
+        
+        // Create elements safely to avoid XSS
+        const iconSpan = document.createElement('span');
+        iconSpan.className = 'file-icon';
+        iconSpan.textContent = '📎';
+        
+        const nameSpan = document.createElement('span');
+        nameSpan.className = 'file-name';
+        nameSpan.textContent = file.name;
+        
+        const sizeSpan = document.createElement('span');
+        sizeSpan.className = 'file-size';
+        sizeSpan.textContent = formatFileSize(file.size);
+        
+        fileItem.appendChild(iconSpan);
+        fileItem.appendChild(nameSpan);
+        fileItem.appendChild(sizeSpan);
+        
         fileList.appendChild(fileItem);
     });
     

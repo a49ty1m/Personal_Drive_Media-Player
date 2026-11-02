@@ -46,13 +46,6 @@ class MediaInfo:
 
 
 @dataclass
-class PlaybackDecision:
-    """Result of the playback strategy decision."""
-    mode: str     # "transcode" | "direct"
-    reason: str   # human-readable explanation
-
-
-@dataclass
 class JobStatus:
     """Current state of a transcoding job."""
     video_id: str

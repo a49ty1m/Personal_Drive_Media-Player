@@ -28,8 +28,9 @@ Transform your media server into a full personal cloud drive:
 - **Upload** - Drag & drop multiple files, support ALL file types, 500MB limit
 - **Download** - Direct download with 3-dot menu or from preview
 - **Delete** - Files and folders with confirmation dialog
+- **Rename** - Files and folders via 3-dot menu (✏️)
 - **Create Folders** - Easy folder creation with name validation
-- **File Preview** - Click filename to preview images, text, PDFs (with zoom!), audio
+- **File Preview** - Click filename to preview images, text, PDFs, audio
 
 ### PDF Viewer
 - Zoom controls: 🔍+ (zoom in), 🔍− (zoom out), ⟲ (reset)
@@ -40,7 +41,8 @@ Transform your media server into a full personal cloud drive:
 
 ### User Interface
 - Dark-themed preview modal
-- 3-dot menu (⋮) for clean actions (download/delete)
+- 3-dot menu (⋮) for clean actions (open/download/rename/delete)
+- Responsive design for mobile and desktop
 - File type icons (🎬 videos, 📄 documents, 🖼️ images, 🎵 audio)
 - File sizes displayed (KB, MB, GB)
 - Row layout for folders and files
@@ -66,10 +68,14 @@ See [DRIVE_FEATURES.md](DRIVE_FEATURES.md) for complete documentation.
 /storage/downloads/Movies/
 ```
 
-This is a read-only source. The server never modifies, moves, or
-deletes anything inside it.
+This is your personal media server and drive. The server allows you to:
+- Browse and stream videos with HLS transcoding
+- Upload files and create folders
+- Delete files and folders
+- Preview images, PDFs, and text files
+- Manage all your media in one place
 
-Generated HLS cache lives in `~/media-server/cache/` — a completely
+Generated HLS cache lives in `/tmp/media-server/cache/` — a completely
 separate directory.
 
 ---
@@ -241,13 +247,13 @@ with an environment variable of the same name:
 
 | Variable          | Default                        | Description                       |
 |-------------------|--------------------------------|-----------------------------------|
-| `MEDIA_ROOT`      | `/storage/downloads/Movies`    | Source media directory            |
+| `MEDIA_ROOT`      | Parent directory of media-server folder | Source media directory            |
 | `PORT`            | `8080`                         | HTTP port                         |
 | `HOST`            | `0.0.0.0`                      | Bind address                      |
 | `MAX_TRANSCODES`  | `1`                            | Max simultaneous FFmpeg processes  |
 | `HLS_SEGMENT_TIME`| `6`                            | Segment duration (seconds)        |
 | `VIDEO_CRF`       | `23`                           | H.264 quality (18–28, lower=better)|
-| `CACHE_DIR`       | `~/media-server/cache`         | HLS output directory              |
+| `CACHE_DIR`       | `/tmp/media-server/cache`      | HLS output directory              |
 | `HLS_READY_TIMEOUT`| `120`                         | Seconds to wait for first segment |
 | `DEBUG`           | `false`                        | Flask debug mode                  |
 
@@ -289,7 +295,7 @@ python app.py --clear-cache
 python app.py --port 9090
 ```
 
-Cache location: `~/media-server/cache/hls/<video-id>/`
+Cache location: `/tmp/media-server/cache/hls/<video-id>/`
 
 ---
 
@@ -364,7 +370,7 @@ FFmpeg finishes → writes #EXT-X-ENDLIST → full VOD available
 File: Movie.mp4 (H.264, AAC)
 Expected: Plays immediately (fast transcode even though codec is H.264;
           direct-play optimization is Phase 2)
-Diagnose: Check ~/media-server/logs/<id>.log if it fails
+Diagnose: Check /tmp/media-server/logs/<id>.log if it fails
 ```
 
 ### Test 2 — MKV HEVC
@@ -491,7 +497,7 @@ The HLS transcode puts both video and audio in the same `stream.m3u8`.
 This should not happen with the default config. Check the FFmpeg log:
 
 ```bash
-cat ~/media-server/logs/<video-id>.log | tail -30
+cat /tmp/media-server/logs/<video-id>.log | tail -30
 ```
 
 ### Transcoding is very slow
@@ -512,8 +518,8 @@ ps aux | grep ffmpeg
 Read the FFmpeg log:
 
 ```bash
-ls ~/media-server/logs/
-cat ~/media-server/logs/<id>.log | tail -50
+ls /tmp/media-server/logs/
+cat /tmp/media-server/logs/<id>.log | tail -50
 ```
 
 Common causes:
@@ -542,8 +548,8 @@ ip addr show | grep "inet " | grep -v "127.0.0.1"
 | 1     | Browse + universal transcode   | ✓ Done     |
 | 2     | Direct-play (H.264/AAC MP4)    | Planned    |
 | 3     | Cache size limits + auto-clean | Planned    |
-| 4     | Subtitle rendering             | Planned    |
-| 5     | Multiple audio track selection | Planned    |
+| 4     | Subtitle rendering             | ✅ Implemented |
+| 5     | Multiple audio track selection | ✅ Implemented |
 | 6     | Metadata / posters / search    | Planned    |
 
 ---
@@ -553,8 +559,8 @@ ip addr show | grep "inet " | grep -v "127.0.0.1"
 - **Path traversal**: all user-supplied paths go through `safe_join()`.
   Requests for `../../etc/passwd` return HTTP 403.
 - **No shell=True**: all subprocess calls use explicit argument lists.
-- **Only two roots are exposed**: `MEDIA_ROOT` (read-only) and
-  `cache/hls/<id>/` (server-generated output).
+- **Three exposed directories**: `MEDIA_ROOT` (browse, stream, upload, delete),
+  `HLS_CACHE_DIR` (transcoded video segments), and `METADATA_CACHE_DIR` (FFprobe cache).
 - **LAN only**: the server binds to `0.0.0.0` and is intended for
   private home networks. Do not expose port 8080 to the internet.
 

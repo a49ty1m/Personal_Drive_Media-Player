@@ -16,9 +16,10 @@ delete_bp = Blueprint("delete", __name__)
 
 def check_password(password: str) -> bool:
     """Check if provided password matches configured password."""
+    import hmac
     if config.DELETE_PASSWORD is None:
         return True  # No password required
-    return password == config.DELETE_PASSWORD
+    return hmac.compare_digest(password, config.DELETE_PASSWORD)
 
 
 @delete_bp.route("/api/delete", methods=["POST"])
@@ -66,7 +67,7 @@ def delete_item():
     # Security: Resolve path safely
     try:
         full_path = safe_join(config.MEDIA_ROOT, target_path)
-    except:
+    except (ValueError, OSError):
         return jsonify({
             "success": False,
             "message": "Invalid path."
@@ -111,10 +112,10 @@ def delete_item():
             "message": "Permission denied."
         }), 403
     
-    except Exception as e:
+    except Exception:
         return jsonify({
             "success": False,
-            "message": f"Error: {str(e)}"
+            "message": "Deletion failed."
         }), 500
 
 

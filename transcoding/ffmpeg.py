@@ -169,14 +169,16 @@ def launch(command: list, log_path: str) -> subprocess.Popen:
     logger.info("FFmpeg starting — log: %s", log_path)
     logger.debug("FFmpeg command: %s", " ".join(command))
 
-    log_fh = open(log_path, "w", encoding="utf-8", errors="replace")
-
-    return subprocess.Popen(
-        command,
-        stdout=subprocess.DEVNULL,
-        stderr=log_fh,
-        close_fds=True,
-    )
+    # Open log file and let subprocess inherit it, then close Python's handle
+    with open(log_path, "w", encoding="utf-8", errors="replace") as log_fh:
+        proc = subprocess.Popen(
+            command,
+            stdout=subprocess.DEVNULL,
+            stderr=log_fh,
+            close_fds=True,
+        )
+    # log_fh is closed here, but subprocess still has the FD
+    return proc
 
 
 # ============================================================

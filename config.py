@@ -71,9 +71,6 @@ MAX_UPLOAD_SIZE = int(os.environ.get("MAX_UPLOAD_SIZE", str(500 * 1024 * 1024)))
 # Enable file/folder deletion functionality
 DELETE_ENABLED = os.environ.get("DELETE_ENABLED", "true").lower() == "true"
 
-# Require confirmation before deletion (client-side)
-REQUIRE_DELETE_CONFIRMATION = True
-
 # Optional: Password protection for uploads (None = disabled)
 # Set via: UPLOAD_PASSWORD=mysecret python app.py
 UPLOAD_PASSWORD = os.environ.get("UPLOAD_PASSWORD", None)

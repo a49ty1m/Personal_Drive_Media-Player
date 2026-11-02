@@ -158,8 +158,7 @@ def _write_vod_playlist(playlist_path: str, duration: float) -> int:
 
     Returns the number of segments.
     """
-    import config as _config
-    seg_time = _config.HLS_SEGMENT_TIME
+    seg_time = config.HLS_SEGMENT_TIME
 
     num_segs = max(1, math.ceil(duration / seg_time))
 

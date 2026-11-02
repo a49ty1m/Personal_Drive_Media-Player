@@ -1,216 +1,109 @@
-# Termux Media Server
+# 🎬 Termux Media Server & Personal Cloud Drive
 
-A lightweight, modular local media server that runs natively inside
-**Termux on Android**. No proot, no Debian, no Docker, no systemd.
+A lightweight, feature-rich media server and personal cloud storage solution that runs natively in **Termux on Android**. Stream videos, manage files, and access your personal drive from any browser on your local network.
 
-Stream your movies and TV series from your phone to any browser on
-the same Wi-Fi network.
+> **No proot, no Docker, no systemd** — pure Python + FFmpeg running directly in Termux.
 
 ---
 
-## Features (Phase 1)
+## ✨ Features Overview
 
-- Browse movies and TV series in any nested folder structure
-- Universal transcoding to H.264/AAC HLS via FFmpeg
-- Non-blocking player: page loads immediately, stream starts as soon
-  as the first segment is ready
-- Automatic cache: transcoded videos are reused on subsequent plays
-- mtime-based cache invalidation: replacing a file auto-retranscodes
-- Path traversal protection — media root is the only exposed directory
-- Configurable via environment variables, no config file editing needed
-- Zero external Python dependencies beyond Flask
+### 🎥 Media Streaming
+- **Universal Video Support** - Stream any video format (MKV, MP4, AVI, etc.)
+- **Automatic Transcoding** - H.264/AAC HLS conversion via FFmpeg
+- **Smart Caching** - Reuse transcoded videos, auto-invalidate on file changes
+- **Multiple Audio Tracks** - Select from available audio streams
+- **Subtitle Support** - Enable and switch between subtitle tracks
+- **Non-blocking Playback** - Page loads instantly, stream starts ASAP
 
-## 🆕 Personal Drive Features
+### 📁 File Management
+- **Upload Files** - Drag & drop multiple files, support for all file types (500MB limit)
+- **Download Files** - Direct download from 3-dot menu or preview modal
+- **Delete Files & Folders** - Recursive deletion with confirmation dialogs
+- **Rename Files & Folders** - Clean rename interface with validation
+- **Create Folders** - Easy folder creation anywhere in the hierarchy
+- **Smart Navigation** - Browse nested folder structures with breadcrumbs
 
-Transform your media server into a full personal cloud drive:
+### 👁️ File Preview System
+- **Images** - JPG, PNG, GIF, WebP, SVG, BMP, ICO
+- **Text Files** - Syntax-highlighted preview for TXT, MD, JSON, XML, CSV, code files
+- **PDFs** - Embedded PDF viewer with browser-native controls
+- **Audio** - Built-in player for MP3, WAV, OGG, M4A, FLAC
+- **Videos** - Automatic redirect to video player with transcoding
 
-### File Management
-- **Upload** - Drag & drop multiple files, support ALL file types, 500MB limit
-- **Download** - Direct download with 3-dot menu or from preview
-- **Delete** - Files and folders with confirmation dialog
-- **Rename** - Files and folders via 3-dot menu (✏️)
-- **Create Folders** - Easy folder creation with name validation
-- **File Preview** - Click filename to preview images, text, PDFs, audio
+### 🎨 Modern Interface
+- **Dark Theme** - Comfortable viewing experience
+- **3-Dot Menus** - Clean context menus with smart positioning (⋮)
+- **Responsive Design** - Works on desktop, tablet, and mobile
+- **File Type Icons** - Visual identification (🎬 videos, 📄 documents, 🖼️ images, 🎵 audio)
+- **File Size Display** - Human-readable formats (KB, MB, GB)
+- **Hover Effects** - Intuitive visual feedback
 
-### PDF Viewer
-- Zoom controls: 🔍+ (zoom in), 🔍− (zoom out), ⟲ (reset)
-- Zoom range: 50% to 300% in 25% steps
-- Live zoom percentage display
-- Smooth transitions
-- Zoom controls only for PDFs (not for images)
-
-### User Interface
-- Dark-themed preview modal
-- 3-dot menu (⋮) for clean actions (open/download/rename/delete)
-- Responsive design for mobile and desktop
-- File type icons (🎬 videos, 📄 documents, 🖼️ images, 🎵 audio)
-- File sizes displayed (KB, MB, GB)
-- Row layout for folders and files
-- Responsive design for desktop and mobile
-- Clean button layout (Download left of Close button)
-
-### How to Use
-1. **Browse**: Navigate folders as usual
-2. **Create Folder**: Click "📁 Create Folder" → enter name → press Enter or Create
-3. **Upload**: Click "📤 Upload Files" → drag & drop or browse → Upload
-4. **Preview**: Click on any filename to preview (images, text, PDFs, audio)
-5. **Download**: Click 3-dot menu (⋮) → Download, or Download button in preview
-6. **Delete**: Click 3-dot menu (⋮) → Delete → Confirm
-7. **PDF Zoom**: In PDF preview, use 🔍+ to zoom in, 🔍− to zoom out, ⟲ to reset
-
-See [DRIVE_FEATURES.md](DRIVE_FEATURES.md) for complete documentation.
+### 🔒 Security
+- **Path Traversal Protection** - Prevents directory escape attacks
+- **Password Protection** - Optional passwords for upload/delete operations
+- **Timing Attack Prevention** - Secure password comparison using HMAC
+- **Safe Filename Handling** - Automatic sanitization of uploaded filenames
+- **File Size Validation** - Configurable upload limits
+- **Root Directory Protection** - Cannot delete the media root
 
 ---
 
-## Media Root
+## 🚀 Quick Start
 
-```
-/storage/downloads/Movies/
-```
+### Prerequisites
 
-This is your personal media server and drive. The server allows you to:
-- Browse and stream videos with HLS transcoding
-- Upload files and create folders
-- Delete files and folders
-- Preview images, PDFs, and text files
-- Manage all your media in one place
-
-Generated HLS cache lives in `/tmp/media-server/cache/` — a completely
-separate directory.
-
----
-
-## Project Structure
-
-```
-media-server/
-├── app.py                  ← entry point
-├── config.py               ← all configuration
-├── requirements.txt
-├── README.md
-├── DRIVE_FEATURES.md       ← personal drive documentation
-│
-├── media/
-│   ├── models.py           ← data classes
-│   ├── filesystem.py       ← safe path resolution + directory listing
-│   └── scanner.py          ← per-request media discovery
-│
-├── transcoding/
-│   ├── detector.py         ← ffprobe wrapper + metadata cache
-│   ├── profiles.py         ← playback decision (transcode / direct)
-│   ├── ffmpeg.py           ← FFmpeg command builder + launcher
-│   └── manager.py          ← job queue, concurrency, state tracking
-│
-├── routes/
-│   ├── browse.py           ← /browse/<path>
-│   ├── playback.py         ← /player/<path> + /hls/<id>/<file>
-│   ├── api.py              ← /api/status/<video_id>
-│   ├── upload.py           ← /api/upload (file upload)
-│   ├── delete.py           ← /api/delete (file/folder deletion)
-│   └── folder.py           ← /api/folder/create (folder creation)
-│
-├── templates/
-│   ├── base.html
-│   ├── browse.html
-│   └── player.html
-│
-└── static/
-    ├── css/
-    │   ├── style.css
-    │   └── drive.css       ← personal drive styles
-    └── js/
-        ├── player.js
-        ├── hls.min.js      ← YOU MUST ADD THIS (see Installation)
-        ├── upload.js       ← file upload UI
-        ├── delete.js       ← file deletion UI
-        ├── menu.js         ← 3-dot menu + file preview
-        └── folder.js       ← folder creation UI
-```
-
----
-
-## Installation (Termux)
-
-### 1 — Grant storage access
-
+1. **Grant Storage Access**
 ```bash
 termux-setup-storage
+# Tap "Allow" when prompted
 ```
 
-When prompted, tap **Allow**.
-
-### 2 — Update packages
-
+2. **Update Packages**
 ```bash
 pkg update && pkg upgrade -y
 ```
 
-### 3 — Install system dependencies
-
+3. **Install Dependencies**
 ```bash
 pkg install python ffmpeg -y
 ```
 
-### 4 — Clone / copy the project
+### Installation
 
-If you have this project as a zip, extract it to Termux home:
-
+1. **Get the Project**
 ```bash
-mkdir -p ~/media-server
-# copy project files here
+cd ~
+git clone <your-repo-url> media-server
+# Or extract from ZIP if you have it
 ```
 
-Or if using git:
-
-```bash
-pkg install git -y
-git clone <your-repo-url> ~/media-server
-```
-
-### 5 — Install Python dependencies
-
+2. **Install Python Dependencies**
 ```bash
 cd ~/media-server
 pip install -r requirements.txt
 ```
 
-### 6 — Download HLS.js
-
-The player requires `hls.js`. Download the minified build:
-
+3. **Download HLS.js** (Required for video playback)
 ```bash
-curl -L \
-  "https://cdn.jsdelivr.net/npm/hls.js@latest/dist/hls.min.js" \
+curl -L "https://cdn.jsdelivr.net/npm/hls.js@latest/dist/hls.min.js" \
   -o ~/media-server/static/js/hls.min.js
 ```
 
-> **No internet on the phone?** Download `hls.min.js` on another
-> device and copy it to `static/js/` via USB or any file transfer.
-
-Verify it arrived:
-
-```bash
-ls -lh ~/media-server/static/js/hls.min.js
-```
-
-### 7 — Verify FFmpeg is working
-
+4. **Verify Installation**
 ```bash
 ffmpeg -version
 ffprobe -version
+ls -lh ~/media-server/static/js/hls.min.js
 ```
 
-Both should print version information. If not: `pkg install ffmpeg -y`
-
-### 8 — Start the server
-
+5. **Start the Server**
 ```bash
 cd ~/media-server
 python app.py
 ```
 
-You will see a startup report similar to:
-
+You'll see output like:
 ```
 ============================================
          TERMUX MEDIA SERVER
@@ -223,7 +116,7 @@ You will see a startup report similar to:
   FFprobe:     ✓ Found
   HLS.js:      ✓ Found
 
-  Cache:       ✓ ~/media-server/cache
+  Cache:       ✓ /tmp/media-server/cache
 
   Server:      http://192.168.1.42:8080
   Max jobs:    1
@@ -234,93 +127,351 @@ You will see a startup report similar to:
 ============================================
 ```
 
-Open the printed URL in your browser (on any device on the same Wi-Fi).
+Open the URL in your browser and start using your media server!
 
 ---
 
-## Configuration
+## 📖 Usage Guide
 
-All settings live in `config.py`. Every setting can be overridden
-with an environment variable of the same name:
+### Browse & Navigate
+1. Open `http://<your-phone-ip>:8080/browse/` in any browser
+2. Click folders to navigate deeper
+3. Click the "← Back" link to go up one level
+4. Click file names to preview or play
 
-### Media Server Settings
+### Upload Files
+1. Click **"📤 Upload Files"** button
+2. Drag and drop files into the upload zone, or click to browse
+3. Click **"Upload"** to start
+4. Wait for the progress bar to complete
 
-| Variable          | Default                        | Description                       |
-|-------------------|--------------------------------|-----------------------------------|
-| `MEDIA_ROOT`      | Parent directory of media-server folder | Source media directory            |
-| `PORT`            | `8080`                         | HTTP port                         |
-| `HOST`            | `0.0.0.0`                      | Bind address                      |
-| `MAX_TRANSCODES`  | `1`                            | Max simultaneous FFmpeg processes  |
-| `HLS_SEGMENT_TIME`| `6`                            | Segment duration (seconds)        |
-| `VIDEO_CRF`       | `23`                           | H.264 quality (18–28, lower=better)|
-| `CACHE_DIR`       | `/tmp/media-server/cache`      | HLS output directory              |
-| `HLS_READY_TIMEOUT`| `120`                         | Seconds to wait for first segment |
-| `DEBUG`           | `false`                        | Flask debug mode                  |
+### Create Folders
+1. Navigate to the desired parent directory
+2. Click **"📁 Create Folder"** button
+3. Enter a folder name (letters, numbers, spaces, `-`, `_`, `.`)
+4. Press **Enter** or click **"Create"**
 
-### Personal Drive Settings
+### Preview Files
+1. Click on any file name
+2. **Images** - Full-screen preview with download option
+3. **Text/Code** - Syntax-highlighted view (50KB limit)
+4. **PDFs** - Embedded viewer with native browser controls
+5. **Audio** - Built-in player with playback controls
+6. **Videos** - Redirects to video player with transcoding
 
-| Variable          | Default                        | Description                       |
-|-------------------|--------------------------------|-----------------------------------|
-| `UPLOAD_ENABLED`  | `true`                         | Enable file uploads               |
-| `DELETE_ENABLED`  | `true`                         | Enable file/folder deletion       |
-| `MAX_UPLOAD_SIZE` | `524288000` (500 MB)           | Max upload file size in bytes     |
-| `UPLOAD_PASSWORD` | `None`                         | Optional upload password          |
-| `DELETE_PASSWORD` | `None`                         | Optional delete password          |
+### Download Files
+- **Method 1**: Click 3-dot menu (⋮) → **Download**
+- **Method 2**: Preview the file → Click **Download** button
 
-Example — custom media root and port:
+### Rename Files/Folders
+1. Click 3-dot menu (⋮) → **✏️ Rename**
+2. Enter new name (filename without extension is auto-selected)
+3. Press **Enter** or click **"Rename"**
+
+### Delete Files/Folders
+1. Click 3-dot menu (⋮) → **🗑️ Delete**
+2. Confirm deletion in the dialog
+3. Folders are deleted recursively
+
+### Play Videos
+1. Click on any video file name
+2. Wait for "Preparing stream..." message
+3. Playback begins automatically once first segments are ready
+4. Use player controls for play/pause, seek, volume
+5. Select audio tracks or subtitles if available
+
+---
+
+## ⚙️ Configuration
+
+All settings in `config.py` can be overridden with environment variables:
+
+### Core Server Settings
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `MEDIA_ROOT` | Parent of media-server dir | Root directory for media files |
+| `HOST` | `0.0.0.0` | Server bind address |
+| `PORT` | `8080` | HTTP port |
+| `DEBUG` | `false` | Flask debug mode |
+
+### Transcoding Settings
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `MAX_TRANSCODES` | `1` | Max simultaneous FFmpeg processes |
+| `HLS_SEGMENT_TIME` | `6` | Segment duration in seconds |
+| `VIDEO_CRF` | `23` | H.264 quality (18-28, lower=better) |
+| `CACHE_DIR` | `/tmp/media-server/cache` | HLS output directory |
+| `HLS_READY_TIMEOUT` | `120` | Timeout for first segment (seconds) |
+
+### Upload Settings
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `UPLOAD_ENABLED` | `true` | Enable/disable file uploads |
+| `MAX_UPLOAD_SIZE` | `524288000` (500 MB) | Max upload size in bytes |
+| `UPLOAD_PASSWORD` | `None` | Optional password for uploads |
+
+### Delete Settings
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `DELETE_ENABLED` | `true` | Enable/disable deletion |
+| `DELETE_PASSWORD` | `None` | Optional password for deletions |
+
+### Example: Custom Configuration
 
 ```bash
+# Custom media root and port
 MEDIA_ROOT=/sdcard/Films PORT=9090 python app.py
-```
 
-Example — enable password protection:
-
-```bash
+# Enable password protection
 UPLOAD_PASSWORD=secret123 DELETE_PASSWORD=secret456 python app.py
+
+# Adjust transcoding quality
+VIDEO_CRF=20 MAX_TRANSCODES=2 python app.py
 ```
 
 ---
 
-## Cache Management
+## 🗂️ Project Structure
 
+```
+media-server/
+├── app.py                      # Main entry point
+├── config.py                   # Configuration settings
+├── requirements.txt            # Python dependencies
+├── README.md                   # This file
+│
+├── media/
+│   ├── models.py              # Data classes
+│   ├── filesystem.py          # Safe path resolution & listing
+│   └── (scanner.py removed)   # Dead code eliminated
+│
+├── transcoding/
+│   ├── detector.py            # FFprobe wrapper & metadata cache
+│   ├── ffmpeg.py              # FFmpeg command builder
+│   ├── manager.py             # Job queue & state tracking
+│   └── (profiles.py removed)  # Dead code eliminated
+│
+├── routes/
+│   ├── browse.py              # File browser
+│   ├── playback.py            # Video player & HLS streaming
+│   ├── api.py                 # Status API
+│   ├── upload.py              # File upload API
+│   ├── delete.py              # File/folder deletion API
+│   ├── folder.py              # Folder creation API
+│   └── download.py            # File download & preview
+│
+├── templates/
+│   ├── base.html              # Base template
+│   ├── browse.html            # File browser UI
+│   └── player.html            # Video player UI
+│
+└── static/
+    ├── css/
+    │   ├── style.css          # Main styles
+    │   └── drive.css          # File management styles
+    └── js/
+        ├── player.js          # Video player logic
+        ├── hls.min.js         # HLS.js library (download required)
+        ├── upload.js          # Upload UI
+        ├── delete.js          # Delete UI
+        ├── menu.js            # 3-dot menus & preview
+        ├── folder.js          # Folder creation UI
+        └── rename.js          # Rename UI
+```
+
+---
+
+## 🎯 How Video Playback Works
+
+```
+1. User clicks video → /player/<path>
+                          ↓
+2. manager.submit() (non-blocking, returns immediately)
+                          ↓
+3. Player HTML sent to browser (shows "Preparing stream...")
+                          ↓
+4. Background thread starts:
+   • Acquire semaphore (MAX_TRANSCODES limit)
+   • Run ffprobe → detect codecs
+   • Launch FFmpeg → transcode to H.264/AAC HLS
+   • Output to /tmp/media-server/cache/hls/<video-id>/
+   • Poll for first segment (seg_000.ts)
+   • Set job state = READY
+                          ↓
+5. Browser polls /api/status/<video-id> every 1.5s
+                          ↓
+6. When READY → load stream.m3u8 via HLS.js
+                          ↓
+7. Playback starts
+                          ↓
+8. FFmpeg continues generating segments in background
+                          ↓
+9. FFmpeg finishes → writes #EXT-X-ENDLIST → full VOD available
+```
+
+**Cache Strategy:**
+- First play: full transcode
+- Subsequent plays: instant playback from cache
+- File modified (mtime changed): auto-retranscode
+- Cache location: `/tmp/media-server/cache/hls/<video-id>/`
+
+---
+
+## 🛡️ Security Features
+
+### Path Traversal Protection
+- All paths validated through `safe_join()`
+- Attempts to access `../../etc/passwd` return HTTP 403
+- Symlinks outside MEDIA_ROOT are blocked
+
+### Password Protection
+- Optional `UPLOAD_PASSWORD` and `DELETE_PASSWORD`
+- Timing-attack-resistant comparison using `hmac.compare_digest()`
+- No passwords stored; checked per-request only
+
+### Safe File Handling
+- Filenames sanitized using `secure_filename()`
+- Non-ASCII filenames properly handled
+- Race condition protection for concurrent uploads
+- File size validation before upload
+
+### XSS Prevention
+- All user inputs properly escaped in templates
+- File names sanitized before display
+- No inline script execution
+
+### Information Disclosure Prevention
+- Generic error messages (no filesystem paths exposed)
+- Detailed errors only in server logs
+- Root directory cannot be deleted
+
+---
+
+## 🐛 Troubleshooting
+
+### Server Won't Start
+
+**"FFmpeg not found"**
 ```bash
-# Remove only incomplete / failed transcode entries
-python app.py --cleanup-cache
+pkg install ffmpeg -y
+ffmpeg -version  # Verify installation
+```
 
-# Remove ALL transcoded HLS cache (frees disk space)
-# Original media is NEVER touched
-python app.py --clear-cache
+**"Media root not found"**
+```bash
+termux-setup-storage
+ls /storage/downloads/  # Verify path exists
 
-# Custom port
+# Or set custom path
+MEDIA_ROOT=/path/to/your/movies python app.py
+```
+
+**"Port 8080 already in use"**
+```bash
 python app.py --port 9090
 ```
 
-Cache location: `/tmp/media-server/cache/hls/<video-id>/`
+### Upload Issues
+
+**"Upload fails" / "Permission denied"**
+```bash
+# Check write permissions
+ls -la /storage/downloads/Movies/
+
+# Ensure UPLOAD_ENABLED is true
+grep UPLOAD_ENABLED config.py
+```
+
+**"File size too large"**
+```bash
+# Increase limit (e.g., 1GB)
+MAX_UPLOAD_SIZE=1073741824 python app.py
+```
+
+### Video Playback Issues
+
+**"HLS.js not found"**
+```bash
+curl -L "https://cdn.jsdelivr.net/npm/hls.js@latest/dist/hls.min.js" \
+  -o ~/media-server/static/js/hls.min.js
+```
+
+**"Video shows 'Preparing stream...' forever"**
+```bash
+# Check if FFmpeg is running
+ps aux | grep ffmpeg
+
+# Check FFmpeg logs
+ls /tmp/media-server/logs/
+tail -50 /tmp/media-server/logs/<video-id>_video.log
+
+# Common causes:
+# - Source file corrupted
+# - Insufficient disk space
+# - FFmpeg crashed
+```
+
+**"Playback is very slow"**
+- `ultrafast` preset already used (fastest option)
+- High-resolution 4K videos are CPU-intensive on mobile
+- Lower `VIDEO_CRF` (e.g., 28) for faster but lower quality
+- Ensure no other heavy processes running
+
+**"Seeking is slow"**
+- Known limitation: seeking requires re-transcoding from that point
+- Wait time depends on phone CPU performance
+- Pre-transcoded segments seek instantly
+
+### File Management Issues
+
+**"Folder created in wrong location"**
+- Bug fixed in latest version
+- Ensure you're running updated code
+- Check browser console for JavaScript errors
+
+**"Delete not working"**
+```bash
+# Check DELETE_ENABLED
+grep DELETE_ENABLED config.py
+
+# Verify password if set
+DELETE_PASSWORD=yourpass python app.py
+```
+
+### Find Your Phone's IP
+
+```bash
+ip addr show | grep "inet " | grep -v "127.0.0.1"
+# Or
+ifconfig | grep "inet " | grep -v "127.0.0.1"
+```
 
 ---
 
-## Keeping the Server Running
+## 🔄 Keep Server Running
 
-Termux closes background processes when you switch apps.
-Use one of these approaches:
+Termux kills background processes when you switch apps. Use one of these methods:
 
-### Option A — Termux:Task (recommended)
-Install the Termux:Task add-on from F-Droid and create a task that
-runs `python ~/media-server/app.py`.
+### Method 1: Termux:Task (Recommended)
+1. Install **Termux:Task** from F-Droid
+2. Create a task that runs: `python ~/media-server/app.py`
+3. Run the task from home screen widget
 
-### Option B — tmux (keeps running if Termux is backgrounded)
-
+### Method 2: tmux
 ```bash
 pkg install tmux -y
 tmux new-session -s media
 cd ~/media-server && python app.py
-# Detach: press Ctrl+B then D
+
+# Detach: Ctrl+B then D
 # Re-attach: tmux attach -t media
 ```
 
-### Option C — Termux:Widget
-Create a shortcut script in `~/.shortcuts/`:
-
+### Method 3: Termux:Widget
 ```bash
 mkdir -p ~/.shortcuts
 cat > ~/.shortcuts/media-server.sh << 'EOF'
@@ -331,241 +482,144 @@ EOF
 chmod +x ~/.shortcuts/media-server.sh
 ```
 
----
-
-## How Playback Works
-
-```
-Browser clicks video
-        ↓
-/player/<path> route
-        ↓
-manager.submit() — non-blocking, returns immediately
-        ↓
-player.html sent to browser (shows "Preparing stream…")
-        ↓
-Background thread starts:
-  [1] Acquire semaphore (MAX_TRANSCODES=1 ensures one at a time)
-  [2] Run ffprobe — detect codecs
-  [3] Launch FFmpeg → H.264/AAC HLS → cache/hls/<id>/
-  [4] Poll for seg_000.ts
-  [5] Set job state = READY
-        ↓
-Browser polls /api/status/<id> every 1.5 seconds
-        ↓
-When READY → load stream.m3u8 via hls.js
-        ↓
-Playback starts. FFmpeg continues generating segments in background.
-        ↓
-FFmpeg finishes → writes #EXT-X-ENDLIST → full VOD available
-```
+Add Termux:Widget to home screen, tap the script to start.
 
 ---
 
-## Testing Checklist
+## 🧹 Cache Management
 
-### Test 1 — MP4 H.264/AAC
-
-```
-File: Movie.mp4 (H.264, AAC)
-Expected: Plays immediately (fast transcode even though codec is H.264;
-          direct-play optimization is Phase 2)
-Diagnose: Check /tmp/media-server/logs/<id>.log if it fails
+### View Cache Size
+```bash
+du -sh /tmp/media-server/cache/
 ```
 
-### Test 2 — MKV HEVC
-
-```
-File: Movie.mkv (HEVC/H.265)
-Expected: Transcoded to H.264, plays successfully
-Diagnose: FFmpeg log will show the encode happening
+### Clean Up Failed Jobs
+```bash
+python app.py --cleanup-cache
 ```
 
-### Test 3 — 10-bit HEVC
-
-```
-File: Movie.mkv (HEVC 10-bit, yuv420p10le)
-Expected: Transcoded to 8-bit H.264 (yuv420p forced in command)
-Diagnose: ffprobe should show pix_fmt=yuv420p10le;
-          output stream.m3u8 should work in Chrome
+### Clear ALL Cache (frees disk space)
+```bash
+python app.py --clear-cache
+# Original media files are NEVER touched
 ```
 
-### Test 4 — Nested folders
-
-```
-Structure: /Movies/Series/Mr Robot/Season 1/ep01.mkv
-Navigate:  Browse → Series → Mr Robot → Season 1 → ep01
-Expected: Back button works at each level, file plays
-```
-
-### Test 5 — Filename with spaces and special characters
-
-```
-File: "The Movie (2023) [BluRay].mkv"
-Expected: URL-encoded correctly, no 404 or 403
-Diagnose: Check browser URL bar, check Flask request log
-```
-
-### Test 6 — New file added after startup
-
-```
-Add: /storage/downloads/Movies/NewMovie.mkv
-Refresh: /browse/ in browser
-Expected: NewMovie.mkv appears immediately
-Note: No restart needed — scanning is per-request
-```
-
-### Test 7 — Seek
-
-```
-During playback, drag the seek bar
-Expected: Video jumps to the new position
-Note: Works once enough segments have been transcoded.
-      Seeking past un-transcoded segments will stall briefly.
-```
-
-### Test 8 — Pause / Resume
-
-```
-Press pause → press play
-Expected: Playback resumes from the same position
-```
-
-### Test 9 — Path traversal attempt
-
-```
-URL: http://phone:8080/browse/../../etc/passwd
-Expected: HTTP 403 — safe_join() blocks it
-```
-
-### Test 10 — FFmpeg failure
-
-```
-Rename a media file after clicking it (so FFmpeg can't find it)
-Expected: Job state → FAILED, player shows error message
-Note: Failed jobs are removed from registry — refresh to retry
-```
-
-### Test 11 — Missing file
-
-```
-URL: http://phone:8080/player/nonexistent.mkv
-Expected: HTTP 404
-```
-
-### Test 12 — Already-cached video
-
-```
-Play a video, wait for full transcode, restart the server, play again
-Expected: Job immediately READY (cache hit), no re-transcode
-```
+### Automatic Cache Invalidation
+- Files are automatically re-transcoded if modified
+- Based on file `mtime` (modification time)
+- No manual intervention needed
 
 ---
 
-## Troubleshooting
+## 📋 Supported File Types
 
-### "FFprobe not found" / "FFmpeg not found"
+### Videos 🎬
+`.mkv`, `.mp4`, `.webm`, `.m4v`, `.mov`, `.avi`, `.ts`, `.flv`, `.wmv`, `.mpg`, `.mpeg`
 
-```bash
-pkg install ffmpeg -y
-ffmpeg -version   # should print version
-```
+### Audio 🎵
+`.mp3`, `.wav`, `.flac`, `.aac`, `.ogg`, `.m4a`, `.wma`, `.opus`
 
-### "Media root not found"
+### Images 🖼️
+`.jpg`, `.jpeg`, `.png`, `.gif`, `.bmp`, `.svg`, `.webp`, `.ico`
 
-```bash
-termux-setup-storage   # if not done yet
-ls /storage/downloads/ # confirm your files are here
-```
+### Documents 📄
+`.pdf`, `.doc`, `.docx`, `.txt`, `.odt`, `.rtf`, `.md`
 
-Or set a custom path:
+### Spreadsheets 📊
+`.xls`, `.xlsx`, `.csv`, `.ods`
 
-```bash
-MEDIA_ROOT=/path/to/your/movies python app.py
-```
+### Presentations 📽️
+`.ppt`, `.pptx`, `.odp`
 
-### "HLS.js not found"
+### Archives 📦
+`.zip`, `.rar`, `.7z`, `.tar`, `.gz`, `.bz2`, `.xz`
 
-```bash
-curl -L "https://cdn.jsdelivr.net/npm/hls.js@latest/dist/hls.min.js" \
-  -o ~/media-server/static/js/hls.min.js
-```
+### Code 💻
+`.py`, `.js`, `.html`, `.css`, `.java`, `.cpp`, `.c`, `.h`, `.json`, `.xml`, `.yml`, `.yaml`, `.sh`, `.go`, `.rs`, `.ts`, `.tsx`, `.jsx`
 
-### Video plays audio but no picture (or vice versa)
-
-The HLS transcode puts both video and audio in the same `stream.m3u8`.
-This should not happen with the default config. Check the FFmpeg log:
-
-```bash
-cat /tmp/media-server/logs/<video-id>.log | tail -30
-```
-
-### Transcoding is very slow
-
-- `ultrafast` preset is already the fastest.
-- Lower `VIDEO_CRF` increases quality but also CPU load (default 23 is good).
-- Ensure no other heavy processes are running on the phone.
-- High-resolution 4K content will always be slow on mobile CPUs.
-
-### Player shows "Transcoding video…" forever
-
-Check if FFmpeg is still running:
-
-```bash
-ps aux | grep ffmpeg
-```
-
-Read the FFmpeg log:
-
-```bash
-ls /tmp/media-server/logs/
-cat /tmp/media-server/logs/<id>.log | tail -50
-```
-
-Common causes:
-- Source file is unreadable (permissions)
-- Source file is corrupted
-- FFmpeg ran out of disk space
-
-### Port 8080 already in use
-
-```bash
-python app.py --port 9090
-```
-
-### Finding your phone's IP
-
-```bash
-ip addr show | grep "inet " | grep -v "127.0.0.1"
-```
+### Other Files 📎
+All other files display with a generic icon and can be downloaded.
 
 ---
 
-## Phase Roadmap
+## 🧪 Testing
 
-| Phase | Feature                        | Status     |
-|-------|--------------------------------|------------|
-| 1     | Browse + universal transcode   | ✓ Done     |
-| 2     | Direct-play (H.264/AAC MP4)    | Planned    |
-| 3     | Cache size limits + auto-clean | Planned    |
-| 4     | Subtitle rendering             | ✅ Implemented |
-| 5     | Multiple audio track selection | ✅ Implemented |
-| 6     | Metadata / posters / search    | Planned    |
+See [TESTING_GUIDE.md](TESTING_GUIDE.md) for comprehensive testing procedures covering:
+- Security fixes (XSS, path traversal, timing attacks)
+- Functionality tests (upload, delete, preview, playback)
+- Resource leak tests (file handles, sockets)
+- Configuration validation
+- Performance benchmarks
 
 ---
 
-## Security Notes
+## 🗺️ Feature Roadmap
 
-- **Path traversal**: all user-supplied paths go through `safe_join()`.
-  Requests for `../../etc/passwd` return HTTP 403.
-- **No shell=True**: all subprocess calls use explicit argument lists.
-- **Three exposed directories**: `MEDIA_ROOT` (browse, stream, upload, delete),
-  `HLS_CACHE_DIR` (transcoded video segments), and `METADATA_CACHE_DIR` (FFprobe cache).
-- **LAN only**: the server binds to `0.0.0.0` and is intended for
-  private home networks. Do not expose port 8080 to the internet.
+| Phase | Feature | Status |
+|-------|---------|--------|
+| 1 | Universal transcoding + browse | ✅ Complete |
+| 2 | File upload/download/delete | ✅ Complete |
+| 3 | Folder management | ✅ Complete |
+| 4 | File preview system | ✅ Complete |
+| 5 | Subtitle support | ✅ Complete |
+| 6 | Multiple audio tracks | ✅ Complete |
+| 7 | Smart menu positioning | ✅ Complete |
+| 8 | Rename functionality | ✅ Complete |
+| 9 | Password protection | ✅ Complete |
+| 10 | Direct-play (H.264/AAC) | 🔄 Planned |
+| 11 | Auto cache cleanup | 🔄 Planned |
+| 12 | Metadata/posters | 🔄 Planned |
+| 13 | Search functionality | 🔄 Planned |
 
 ---
 
-## License
+## 📚 Additional Documentation
 
-MIT — do whatever you want with it.
+- **[DRIVE_FEATURES.md](DRIVE_FEATURES.md)** - Detailed personal drive feature documentation
+- **[SMART_MENU_POSITIONING.md](SMART_MENU_POSITIONING.md)** - Technical details on menu positioning algorithm
+- **[TESTING_GUIDE.md](TESTING_GUIDE.md)** - Comprehensive testing procedures and checklists
+
+---
+
+## 🤝 Contributing
+
+Contributions welcome! Areas for improvement:
+- Direct playback for compatible videos (skip transcoding)
+- Better mobile UI optimizations
+- Thumbnail generation for videos
+- Metadata extraction and display
+- Search and filtering
+- User authentication system
+
+---
+
+## 📄 License
+
+MIT License - do whatever you want with it.
+
+---
+
+## 🙏 Credits
+
+Built with:
+- **Python** - Core application
+- **Flask** - Web framework
+- **FFmpeg** - Video transcoding
+- **HLS.js** - Video streaming in browser
+- **Termux** - Android terminal environment
+
+---
+
+## 📞 Support
+
+Having issues? Check:
+1. **Troubleshooting section** above
+2. **Server logs**: `/tmp/media-server/logs/`
+3. **Browser console**: Press F12 in browser
+4. **[TESTING_GUIDE.md](TESTING_GUIDE.md)** for test procedures
+
+---
+
+**Enjoy your personal media server and cloud drive!** ☁️🎬
+
+*Last Updated: November 3, 2026*

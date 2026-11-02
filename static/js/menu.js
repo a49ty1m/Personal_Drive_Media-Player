@@ -35,7 +35,6 @@ function toggleMenu(event, fileId) {
         if (m.id !== menuId) {
             m.classList.remove('show');
             m.classList.remove('open-up');
-            m.classList.remove('open-left');
         }
     });
     
@@ -46,56 +45,51 @@ function toggleMenu(event, fileId) {
     if (isOpening) {
         // Reset positioning classes
         menu.classList.remove('open-up');
-        menu.classList.remove('open-left');
         
-        // Force a reflow to ensure menu is rendered
-        menu.offsetHeight;
-        
-        // Position menu immediately
+        // Position the menu
         positionMenu(menu, button);
     }
 }
 
 /**
- * Smart positioning: adjust menu position to stay on screen
+ * Smart positioning: position fixed menu relative to button
  */
 function positionMenu(menu, button) {
     const buttonRect = button.getBoundingClientRect();
     const viewportHeight = window.innerHeight;
     const viewportWidth = window.innerWidth;
+    const menuWidth = 180;
     
-    // Initially position menu next to button (to the left of the button)
-    menu.style.left = (buttonRect.left - 180) + 'px'; // 180px = menu width
-    menu.style.top = (buttonRect.bottom + 5) + 'px';
+    // Position menu to the right edge of the button, opening downward
+    let left = buttonRect.right - menuWidth;
+    let top = buttonRect.bottom + 5;
     
-    // Force reflow to get accurate measurements
-    const menuRect = menu.getBoundingClientRect();
-    
-    // Add some padding from edges
-    const padding = 20;
-    
-    // Check vertical position
-    const menuBottom = buttonRect.bottom + menuRect.height + padding;
-    const spaceAbove = buttonRect.top;
-    
-    if (menuBottom > viewportHeight && spaceAbove > menuRect.height + padding) {
-        // Not enough space below, open upward
-        menu.style.top = (buttonRect.top - menuRect.height - 5) + 'px';
-        menu.classList.add('open-up');
-    } else {
-        menu.style.top = (buttonRect.bottom + 5) + 'px';
+    // Ensure menu doesn't go off the right edge
+    if (left < 10) {
+        left = 10;
     }
     
-    // Check horizontal position - keep menu to the left of button
-    const menuLeft = buttonRect.left - menuRect.width;
-    
-    if (menuLeft < padding) {
-        // Not enough space on left, show to the right of button
-        menu.style.left = (buttonRect.right + 5) + 'px';
-        menu.classList.add('open-right');
-    } else {
-        menu.style.left = (buttonRect.left - menuRect.width) + 'px';
+    // Ensure menu doesn't go off the left edge
+    if (left + menuWidth > viewportWidth - 10) {
+        left = viewportWidth - menuWidth - 10;
     }
+    
+    // Apply initial position
+    menu.style.left = left + 'px';
+    menu.style.top = top + 'px';
+    
+    // Wait for render to get accurate height
+    setTimeout(() => {
+        const menuRect = menu.getBoundingClientRect();
+        const spaceBelow = viewportHeight - menuRect.bottom;
+        const spaceAbove = buttonRect.top;
+        
+        // If not enough space below and more space above, open upward
+        if (spaceBelow < 10 && spaceAbove > menuRect.height + 10) {
+            menu.style.top = (buttonRect.top - menuRect.height - 5) + 'px';
+            menu.classList.add('open-up');
+        }
+    }, 10);
 }
 
 /**
@@ -105,7 +99,6 @@ function closeMenu() {
     document.querySelectorAll('.dropdown-menu').forEach(menu => {
         menu.classList.remove('show');
         menu.classList.remove('open-up');
-        menu.classList.remove('open-left');
     });
 }
 

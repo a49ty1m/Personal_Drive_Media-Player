@@ -162,7 +162,7 @@
     animation: slideDown 0.2s ease-out;
 }
 
-/* Smart positioning classes are now handled via JS with fixed positioning */
+/* Smart positioning classes */
 .dropdown-menu.open-up.show {
     animation: slideUp 0.2s ease-out;
 }

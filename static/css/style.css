@@ -1,0 +1,622 @@
+/* ============================================================
+   style.css — Termux Media Server
+   Dark, clean, lightweight. No external dependencies.
+   ============================================================ */
+
+
+/* ============================================================
+   RESET & BASE
+   ============================================================ */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  /* Palette */
+  --bg:              #0b0b10;
+  --surface:         #13131d;
+  --surface-hover:   #1c1c2a;
+  --surface-active:  #22223a;
+  --border:          rgba(255, 255, 255, 0.07);
+  --border-hover:    rgba(124, 58, 237, 0.35);
+
+  /* Accent — a violet that pops on dark */
+  --accent:          #7c3aed;
+  --accent-light:    #a78bfa;
+  --accent-glow:     rgba(124, 58, 237, 0.20);
+
+  /* Text */
+  --text:            #eeeaf8;
+  --text-muted:      #9890b0;
+
+  /* Status colours */
+  --ok:              #34d399;
+  --ok-glow:         rgba(52, 211, 153, 0.25);
+  --err:             #f87171;
+  --err-glow:        rgba(248, 113, 113, 0.25);
+  --loading-color:   var(--accent-light);
+
+  /* Shape */
+  --radius:          12px;
+  --radius-sm:       8px;
+  --radius-xs:       6px;
+
+  /* Motion */
+  --ease:            0.18s ease;
+  --shadow-card:     0 2px 16px rgba(0, 0, 0, 0.50);
+  --shadow-hover:    0 8px 28px rgba(0, 0, 0, 0.60);
+}
+
+html {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+               "Helvetica Neue", Arial, sans-serif;
+  font-size: 16px;
+  color: var(--text);
+  background: var(--bg);
+  min-height: 100vh;
+  -webkit-text-size-adjust: 100%;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* ============================================================
+   HEADER
+   ============================================================ */
+
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  height: 56px;
+  background: rgba(11, 11, 16, 0.82);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 1.5rem;
+}
+
+.header-inner {
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.logo {
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  transition: color var(--ease);
+}
+
+.logo:hover {
+  color: var(--accent-light);
+}
+
+/* ============================================================
+   MAIN CONTENT
+   ============================================================ */
+
+.main-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 4rem;
+}
+
+/* ============================================================
+   BACK LINK
+   ============================================================ */
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  padding: 0.35rem 0.85rem;
+  border-radius: var(--radius-xs);
+  margin-bottom: 1.5rem;
+  transition: all var(--ease);
+}
+
+.back-link:hover {
+  color: var(--text);
+  border-color: var(--border-hover);
+  background: var(--surface);
+}
+
+/* ============================================================
+   PAGE TITLE
+   ============================================================ */
+
+.page-title {
+  font-size: 1.9rem;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  color: var(--text);
+  margin-bottom: 1.75rem;
+  line-height: 1.2;
+}
+
+/* ============================================================
+   SECTION LABEL
+   ============================================================ */
+
+.section-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.10em;
+  color: var(--text-muted);
+  margin-bottom: 0.65rem;
+  margin-top: 2rem;
+}
+
+.section-label:first-of-type {
+  margin-top: 0;
+}
+
+/* ============================================================
+   FOLDER GRID
+   ============================================================ */
+
+.folder-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 0.65rem;
+  margin-bottom: 0.5rem;
+}
+
+.folder-card {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.95rem 1rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: background var(--ease), border-color var(--ease),
+              transform var(--ease), box-shadow var(--ease);
+  overflow: hidden;
+}
+
+.folder-card:hover {
+  background: var(--surface-hover);
+  border-color: var(--border-hover);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-hover), 0 0 0 1px var(--accent-glow);
+}
+
+.folder-card:active {
+  transform: translateY(0);
+  background: var(--surface-active);
+}
+
+.folder-icon {
+  font-size: 1.6rem;
+  flex-shrink: 0;
+  line-height: 1;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
+}
+
+.folder-name {
+  font-size: 0.875rem;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--text);
+}
+
+/* ============================================================
+   FILE LIST
+   ============================================================ */
+
+.file-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.file-item {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 0.85rem 1.1rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: background var(--ease), border-color var(--ease),
+              transform var(--ease);
+}
+
+.file-item:hover {
+  background: var(--surface-hover);
+  border-color: var(--border-hover);
+  transform: translateX(3px);
+}
+
+.file-item:active {
+  transform: translateX(1px);
+  background: var(--surface-active);
+}
+
+.file-icon {
+  font-size: 1.2rem;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.file-name {
+  font-size: 0.925rem;
+  font-weight: 400;
+  color: var(--text);
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.file-arrow {
+  font-size: 1.1rem;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  transition: transform var(--ease), color var(--ease);
+}
+
+.file-item:hover .file-arrow {
+  transform: translateX(3px);
+  color: var(--accent-light);
+}
+
+/* ============================================================
+   EMPTY STATE
+   ============================================================ */
+
+.empty-state {
+  text-align: center;
+  padding: 5rem 2rem;
+  color: var(--text-muted);
+}
+
+.empty-state-icon {
+  font-size: 3.5rem;
+  margin-bottom: 1rem;
+  opacity: 0.6;
+}
+
+.empty-state-text {
+  font-size: 1rem;
+  opacity: 0.7;
+}
+
+/* ============================================================
+   PLAYER — styles are defined inline in player.html
+   (Kept here only as a fallback shell)
+   ============================================================ */
+
+/* Audio selector — styled inline in player.html */
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+
+@media (max-width: 640px) {
+  .main-content {
+    padding: 1.25rem 1rem 3rem;
+  }
+
+  .page-title {
+    font-size: 1.5rem;
+  }
+
+  .folder-grid {
+    grid-template-columns: repeat(auto-fill, minmax(145px, 1fr));
+  }
+}
+
+@media (max-width: 400px) {
+  .folder-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* ============================================================
+   VLC OSD (On-Screen Display)
+   ============================================================ */
+
+#vlc-osd {
+  position: absolute;
+  top: 1.1rem;
+  left: 50%;
+  transform: translateX(-50%) translateY(-4px);
+  z-index: 50;
+  display: none;
+  align-items: center;
+  gap: 0.55rem;
+  background: rgba(13, 13, 20, 0.88);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(124, 58, 237, 0.28);
+  border-radius: 10px;
+  padding: 0.5rem 1.1rem 0.5rem 0.9rem;
+  pointer-events: none;
+  white-space: nowrap;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(124,58,237,0.12);
+  transition: opacity 0.45s ease, transform 0.45s ease;
+  opacity: 0;
+}
+
+#vlc-osd.osd-visible {
+  display: flex;
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+#vlc-osd.osd-fade {
+  opacity: 0;
+  transform: translateX(-50%) translateY(-6px);
+}
+
+.osd-icon {
+  font-size: 1.15rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.osd-text {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #f0ecff;
+  letter-spacing: 0.01em;
+}
+
+/* ============================================================
+   VLC Help Button (? on player)
+   ============================================================ */
+
+#vlc-help-btn {
+  position: absolute;
+  bottom: 0.75rem;
+  right: 0.75rem;
+  z-index: 30;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(13, 13, 20, 0.80);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(124, 58, 237, 0.30);
+  color: var(--accent-light);
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--ease), border-color var(--ease),
+              transform var(--ease), box-shadow var(--ease);
+  line-height: 1;
+}
+
+#vlc-help-btn:hover {
+  background: rgba(124, 58, 237, 0.25);
+  border-color: var(--accent-light);
+  transform: scale(1.12);
+  box-shadow: 0 0 14px rgba(124, 58, 237, 0.35);
+}
+
+/* ============================================================
+   Help Panel backdrop
+   ============================================================ */
+
+#vlc-help-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 900;
+  background: rgba(0, 0, 0, 0.60);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  animation: fadein 0.2s ease;
+}
+
+#vlc-help-backdrop.help-open {
+  display: block;
+}
+
+/* ============================================================
+   Help Panel
+   ============================================================ */
+
+#vlc-help {
+  display: none;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.96);
+  z-index: 901;
+  width: min(92vw, 860px);
+  max-height: 85vh;
+  overflow-y: auto;
+  background: rgba(16, 16, 26, 0.97);
+  border: 1px solid rgba(124, 58, 237, 0.30);
+  border-radius: 18px;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.75),
+              0 0 0 1px rgba(124,58,237,0.10);
+  padding: 1.75rem 2rem 2rem;
+  animation: slidein 0.22s ease forwards;
+  /* scrollbar */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(124,58,237,0.35) transparent;
+}
+
+#vlc-help::-webkit-scrollbar {
+  width: 6px;
+}
+#vlc-help::-webkit-scrollbar-track {
+  background: transparent;
+}
+#vlc-help::-webkit-scrollbar-thumb {
+  background: rgba(124,58,237,0.35);
+  border-radius: 3px;
+}
+
+#vlc-help.help-open {
+  display: block;
+}
+
+@keyframes slidein {
+  from { opacity: 0; transform: translate(-50%, -48%) scale(0.94); }
+  to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+@keyframes fadein {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.help-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.4rem;
+}
+
+.help-title {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--text);
+  letter-spacing: -0.02em;
+}
+
+.help-subtitle {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin-bottom: 1.5rem;
+}
+
+.help-close {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  border-radius: var(--radius-xs);
+  width: 30px;
+  height: 30px;
+  font-size: 1.2rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--ease);
+}
+
+.help-close:hover {
+  background: var(--surface-hover);
+  border-color: var(--border-hover);
+  color: var(--text);
+}
+
+/* ---- Grid layout ---- */
+.help-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1.5rem 1.25rem;
+}
+
+.help-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.help-group-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.11em;
+  color: var(--accent-light);
+  margin-bottom: 0.6rem;
+  border-bottom: 1px solid rgba(124,58,237,0.15);
+  padding-bottom: 0.35rem;
+}
+
+.help-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.6rem;
+  padding: 0.32rem 0;
+  border-bottom: 1px solid rgba(255,255,255,0.035);
+}
+
+.help-row:last-child {
+  border-bottom: none;
+}
+
+.help-keys {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  flex-shrink: 0;
+}
+
+kbd {
+  display: inline-block;
+  background: var(--surface);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-bottom: 2px solid rgba(255,255,255,0.06);
+  border-radius: 5px;
+  padding: 0.15rem 0.45rem;
+  font-size: 0.72rem;
+  font-family: "SF Mono", "Fira Code", "Consolas", monospace;
+  font-weight: 600;
+  color: var(--accent-light);
+  white-space: nowrap;
+  box-shadow: 0 1px 0 rgba(0,0,0,0.5);
+  line-height: 1.4;
+}
+
+.help-desc {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  text-align: right;
+  flex: 1;
+  line-height: 1.4;
+}
+
+/* ============================================================
+   RESPONSIVE — Help Panel
+   ============================================================ */
+
+@media (max-width: 640px) {
+  #vlc-help {
+    padding: 1.25rem 1rem 1.5rem;
+    width: 96vw;
+    max-height: 90vh;
+  }
+
+  .help-grid {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+
+  .help-title {
+    font-size: 1rem;
+  }
+}
+

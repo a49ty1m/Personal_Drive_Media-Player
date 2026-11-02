@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} — My Drive{% endblock %}
+
+{% block content %}
+
+  <div class="page-header">
+    <h1 class="page-title">{{ title }}</h1>
+    <div class="header-actions">
+      {% if upload_enabled %}
+        <button class="btn-folder" onclick="showCreateFolderModal()">📁 Create Folder</button>
+        <button class="btn-upload" onclick="showUploadModal()">📤 Upload Files</button>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if parent %}
+    <a class="back-link" href="{{ parent }}">← Back</a>
+  {% endif %}
+
+  {% if folders %}
+    <p class="section-label">Folders</p>
+    <div class="folder-list">
+      {% for folder in folders %}
+        <div class="folder-row" id="folder-{{ loop.index }}" data-path="{{ folder.relative }}">
+          <span class="folder-icon">📁</span>
+          <span class="folder-name" onclick="openFolder('{{ folder.url }}')">{{ folder.name }}</span>
+          <div class="menu-dots">
+            <button class="menu-dots-btn" onclick="toggleMenu(event, 'folder-{{ loop.index }}')">⋮</button>
+            <div class="dropdown-menu" id="menu-folder-{{ loop.index }}">
+              <button class="dropdown-item" onclick="openFolder('{{ folder.url }}')">
+                <span>📂</span> Open
+              </button>
+              <div class="dropdown-divider"></div>
+              <button class="dropdown-item danger" onclick="closeMenu(); confirmDelete('{{ folder.relative }}', '{{ folder.name }}', 'folder')">
+                <span>🗑️</span> Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  {% if files %}
+    <p class="section-label">Files</p>
+    <div class="file-list">
+      {% for file in files %}
+        <div class="file-item" id="file-{{ loop.index }}" data-path="{{ file.relative }}" data-extension="{{ file.extension }}" data-is-video="{{ file.is_video }}" data-url="{{ file.url }}">
+          <span class="file-icon">{{ file.icon }}</span>
+          <span class="file-name" onclick="clickFile('file-{{ loop.index }}')">{{ file.name }}</span>
+          <span class="file-size">{{ file.size }}</span>
+          <div class="menu-dots">
+            <button class="menu-dots-btn" onclick="toggleMenu(event, 'file-{{ loop.index }}')">⋮</button>
+            <div class="dropdown-menu" id="menu-file-{{ loop.index }}">
+              <button class="dropdown-item" onclick="downloadFile('{{ file.relative }}', '{{ file.name }}')">
+                <span>⬇️</span> Download
+              </button>
+              <div class="dropdown-divider"></div>
+              <button class="dropdown-item danger" onclick="closeMenu(); confirmDelete('{{ file.relative }}', '{{ file.name }}', 'file')">
+                <span>🗑️</span> Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  {% if not folders and not files %}
+    <div class="empty-state">
+      <div class="empty-state-icon">📂</div>
+      <p class="empty-state-text">This folder is empty.</p>
+      {% if upload_enabled %}
+        <p class="empty-state-hint">Click "Upload Files" to add files</p>
+      {% endif %}
+    </div>
+  {% endif %}
+
+  <!-- Create Folder Modal -->
+  <div id="folderModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>📁 Create New Folder</h2>
+        <button class="modal-close" onclick="closeFolderModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="folderNameInput">Folder Name:</label>
+          <input type="text" id="folderNameInput" placeholder="Enter folder name..." autocomplete="off">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" onclick="closeFolderModal()">Cancel</button>
+        <button class="btn-primary" onclick="createFolder()">Create</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Store current path for upload
+    document.body.dataset.currentPath = "{{ path }}";
+  </script>
+
+{% endblock %}

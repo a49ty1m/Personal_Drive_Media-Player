@@ -59,6 +59,26 @@ A lightweight, feature-rich media server and personal cloud storage solution tha
 
 ---
 
+## 🎨 UI Demo
+
+Want to see the interface without running the full server? Check out the standalone demo:
+
+```bash
+cd demo
+open index.html  # or use: python3 -m http.server 8000
+```
+
+The demo includes:
+- ✅ Complete UI showcase (navigation, gallery, filters)
+- ✅ Interactive elements (star toggle, filters, navigation)
+- ✅ Sample content (folders, videos, images, documents)
+- ✅ Modal dialogs and notifications
+- ✅ No backend required - pure HTML/CSS/JS
+
+Perfect for screenshots, design demos, or testing the UI on different devices!
+
+---
+
 ## 🚀 Quick Start
 
 ### Prerequisites
@@ -298,6 +318,10 @@ media-server/
 ├── config.py                   # Configuration settings
 ├── requirements.txt            # Python dependencies
 ├── README.md                   # This file
+│
+├── demo/
+│   ├── index.html             # Standalone UI demo
+│   └── demo.css               # Demo styles
 │
 ├── media/
 │   ├── models.py              # Data classes

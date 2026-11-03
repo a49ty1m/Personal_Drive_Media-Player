@@ -2,6 +2,8 @@
  * upload.js - File upload functionality
  */
 
+console.log('✓ upload.js loaded successfully');
+
 // Upload modal state
 let uploadModal = null;
 let currentPath = "";
@@ -12,13 +14,32 @@ let currentPath = "";
 function initUpload() {
     currentPath = document.body.dataset.currentPath || "";
     
-    // Check if upload is enabled
+    // Create modal immediately with defaults, then update with API data
+    createUploadModal(false, 100); // Default values
+    
+    // Check if upload is enabled and update settings
     fetch('/api/upload/check')
         .then(res => res.json())
         .then(data => {
             if (data.enabled) {
-                // Just create modal, button already exists in HTML
-                createUploadModal(data.password_required, data.max_size_mb);
+                // Update modal with actual settings
+                const limitEl = document.querySelector('.upload-limit');
+                if (limitEl) {
+                    limitEl.textContent = `Max size: ${data.max_size_mb} MB per file`;
+                }
+                
+                // Add password field if required
+                if (data.password_required && !document.getElementById('uploadPassword')) {
+                    const modalBody = document.querySelector('#uploadModal .modal-body');
+                    const uploadZone = document.getElementById('uploadZone');
+                    const passwordField = document.createElement('div');
+                    passwordField.className = 'form-group';
+                    passwordField.innerHTML = `
+                        <label for="uploadPassword">Password:</label>
+                        <input type="password" id="uploadPassword" placeholder="Enter upload password">
+                    `;
+                    uploadZone.insertAdjacentElement('afterend', passwordField);
+                }
             }
         })
         .catch(err => console.error('Failed to check upload status:', err));
@@ -28,6 +49,21 @@ function initUpload() {
  * Show upload modal (called from HTML button)
  */
 function showUploadModal() {
+    console.log('showUploadModal called, uploadModal exists:', !!uploadModal);
+    
+    // If modal doesn't exist yet, wait a bit and try again
+    if (!uploadModal) {
+        console.log('Modal not ready, waiting...');
+        setTimeout(() => {
+            if (uploadModal) {
+                openUploadModal();
+            } else {
+                alert('Upload is loading, please try again in a moment.');
+            }
+        }, 100);
+        return;
+    }
+    
     openUploadModal();
 }
 
@@ -243,6 +279,10 @@ function formatFileSize(bytes) {
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
 }
+
+// Make functions globally accessible
+window.showUploadModal = showUploadModal;
+window.closeUploadModal = closeUploadModal;
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', initUpload);

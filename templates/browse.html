@@ -305,10 +305,17 @@
     let pendingDelete = null;
     
     function confirmDelete(path, name, type) {
+      console.log('confirmDelete called:', { path, name, type });
       pendingDelete = { path, name, type };
       
       const modal = document.getElementById('deleteModal');
       const message = document.getElementById('deleteModalMessage');
+      
+      if (!modal || !message) {
+        console.error('Delete modal elements not found');
+        alert('Delete modal not found. Please refresh the page.');
+        return;
+      }
       
       if (type === 'folder') {
         message.innerHTML = `Are you sure you want to delete the folder <strong>"${name}"</strong> and all its contents?`;
@@ -317,24 +324,42 @@
       }
       
       modal.classList.add('show');
+      console.log('Delete modal opened');
     }
     
     function closeDeleteModal() {
       const modal = document.getElementById('deleteModal');
-      modal.classList.remove('show');
+      if (modal) {
+        modal.classList.remove('show');
+      }
       pendingDelete = null;
+      console.log('Delete modal closed');
     }
     
     function performDelete() {
-      if (!pendingDelete) return;
+      console.log('performDelete called, pendingDelete:', pendingDelete);
+      
+      if (!pendingDelete) {
+        console.warn('No pending delete');
+        return;
+      }
       
       const { path, name, type } = pendingDelete;
       closeDeleteModal();
       
+      // Check if delete functions exist
+      if (typeof deleteFolder !== 'function' || typeof deleteFile !== 'function') {
+        console.error('Delete functions not found. Make sure delete.js is loaded.');
+        alert('Delete functionality not loaded. Please refresh the page.');
+        return;
+      }
+      
       // Call the actual delete function from delete.js
       if (type === 'folder') {
+        console.log('Calling deleteFolder');
         deleteFolder(path, name);
       } else {
+        console.log('Calling deleteFile');
         deleteFile(path, name);
       }
     }
@@ -343,10 +368,21 @@
     document.addEventListener('keydown', function(e) {
       if (e.key === 'Escape') {
         const deleteModal = document.getElementById('deleteModal');
-        if (deleteModal.classList.contains('show')) {
+        if (deleteModal && deleteModal.classList.contains('show')) {
           closeDeleteModal();
         }
       }
+    });
+    
+    // Debug: Check if functions are loaded
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('=== Function Availability Check ===');
+      console.log('showUploadModal:', typeof showUploadModal);
+      console.log('deleteFile:', typeof deleteFile);
+      console.log('deleteFolder:', typeof deleteFolder);
+      console.log('confirmDelete:', typeof confirmDelete);
+      console.log('performDelete:', typeof performDelete);
+      console.log('===============================');
     });
     
     // Load star status for all files on page load

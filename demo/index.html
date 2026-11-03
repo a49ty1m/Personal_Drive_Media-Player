@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Drive Media - Demo</title>
+  <link rel="stylesheet" href="demo.css">
+</head>
+<body>
+
+  <!-- Top Navigation -->
+  <nav class="top-nav">
+    <div class="nav-brand">
+      <div class="nav-brand-icon">🎬</div>
+      <span>My Drive Media</span>
+    </div>
+    <div class="nav-menu">
+      <a href="#" class="nav-link active">🏠 Home</a>
+      <a href="#" class="nav-link">⭐ Starred</a>
+      <a href="#" class="nav-link">🕒 Recent</a>
+    </div>
+    <div class="nav-actions">
+      <input type="text" class="search-input" placeholder="Search files..." id="searchInput">
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="wrapper">
+    <!-- Page Header -->
+    <div class="page-head">
+      <h1 class="page-title-main">Movies</h1>
+      <p class="page-subtitle">Browse your media files in beautiful gallery view</p>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <a class="back-btn" href="#">← Back</a>
+        <button class="filter-btn active">All</button>
+        <button class="filter-btn">Folders</button>
+        <button class="filter-btn">Videos</button>
+        <button class="filter-btn">Images</button>
+        <button class="filter-btn">Documents</button>
+      </div>
+      <div class="toolbar-right">
+        <button class="btn btn-ghost">📁 New Folder</button>
+        <button class="btn btn-primary">+ Upload Files</button>
+      </div>
+    </div>
+
+    <!-- Gallery Grid -->
+    <div class="gallery">
+      
+      <!-- Folder Card -->
+      <div class="card folder-card">
+        <div class="card-image folder-image">📁</div>
+        <div class="card-body">
+          <h3 class="card-title">Action Movies</h3>
+          <div class="card-meta">
+            <span>Folder</span>
+          </div>
+        </div>
+        <div class="card-footer">
+          <span class="card-action" title="Star">⭐</span>
+          <span class="card-action" title="Download as ZIP">📦</span>
+          <span class="card-action" title="More">⋮</span>
+        </div>
+      </div>
+
+      <!-- Folder Card 2 -->
+      <div class="card folder-card">
+        <div class="card-image folder-image">📁</div>
+        <div class="card-body">
+          <h3 class="card-title">TV Shows</h3>
+          <div class="card-meta">
+            <span>Folder</span>
+          </div>
+        </div>
+        <div class="card-footer">
+          <span class="card-action" title="Star">☆</span>
+          <span class="card-action" title="Download as ZIP">📦</span>
+          <span class="card-action" title="More">⋮</span>
+        </div>
+      </div>
+
+      <!-- Video File Card -->
+      <div class="card file-card">
+        <div class="card-image file-image">🎬</div>
+        <div class="card-body">
+          <h3 class="card-title">Inception.mkv</h3>
+          <div class="card-meta">
+            <span>MKV</span>
+            <span>2.4 GB</span>
+          </div>
+        </div>
+        <div class="card-footer">
+          <span class="card-action" title="Star">⭐</span>
+          <span class="card-action" title="Download">💾</span>
+          <span class="card-action" title="More">⋮</span>
+        </div>
+      </div>
+
+      <!-- Video File Card 2 -->
+      <div class="card file-card">
+        <div class="card-image file-image">🎬</div>
+        <div class="card-body">
+          <h3 class="card-title">The Matrix.mp4</h3>
+          <div class="card-meta">
+            <span>MP4</span>
+            <span>1.8 GB</span>
+          </div>
+        </div>
+        <div class="card-footer">
+          <span class="card-action" title="Star">☆</span>
+          <span class="card-action" title="Download">💾</span>
+          <span class="card-action" title="More">⋮</span>
+        </div>
+      </div>
+
+      <!-- Image File Card -->
+      <div class="card file-card">
+        <div class="card-image file-image">🖼️</div>
+        <div class="card-body">
+          <h3 class="card-title">Poster.jpg</h3>
+          <div class="card-meta">
+            <span>JPG</span>
+            <span>1.2 MB</span>
+          </div>
+        </div>
+        <div class="card-footer">
+          <span class="card-action" title="Star">☆</span>
+          <span class="card-action" title="Download">💾</span>
+          <span class="card-action" title="More">⋮</span>
+        </div>
+      </div>
+
+      <!-- Document File Card -->
+      <div class="card file-card">
+        <div class="card-image file-image">📄</div>
+        <div class="card-body">
+          <h3 class="card-title">Script.pdf</h3>
+          <div class="card-meta">
+            <span>PDF</span>
+            <span>856 KB</span>
+          </div>
+        </div>
+        <div class="card-footer">
+          <span class="card-action" title="Star">☆</span>
+          <span class="card-action" title="Download">💾</span>
+          <span class="card-action" title="More">⋮</span>
+        </div>
+      </div>
+
+      <!-- Audio File Card -->
+      <div class="card file-card">
+        <div class="card-image file-image">🎵</div>
+        <div class="card-body">
+          <h3 class="card-title">Soundtrack.mp3</h3>
+          <div class="card-meta">
+            <span>MP3</span>
+            <span>5.4 MB</span>
+          </div>
+        </div>
+        <div class="card-footer">
+          <span class="card-action" title="Star">⭐</span>
+          <span class="card-action" title="Download">💾</span>
+          <span class="card-action" title="More">⋮</span>
+        </div>
+      </div>
+
+      <!-- Code File Card -->
+      <div class="card file-card">
+        <div class="card-image file-image">💻</div>
+        <div class="card-body">
+          <h3 class="card-title">script.sh</h3>
+          <div class="card-meta">
+            <span>SH</span>
+            <span>2.1 KB</span>
+          </div>
+        </div>
+        <div class="card-footer">
+          <span class="card-action" title="Star">☆</span>
+          <span class="card-action" title="Download">💾</span>
+          <span class="card-action" title="More">⋮</span>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Delete Confirmation Modal -->
+  <div id="deleteModal" class="modal show">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>🗑️ Confirm Delete</h2>
+        <button class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="color: #e0e0e0; line-height: 1.6;">
+          Are you sure you want to delete <strong>"Inception.mkv"</strong>?
+        </p>
+        <p style="color: #ef4444; margin-top: 15px; font-weight: 500;">
+          ⚠️ This action cannot be undone!
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel">Cancel</button>
+        <button class="btn-danger">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ZIP Progress Notification -->
+  <div id="zipNotification" class="zip-notification show">
+    <div class="zip-notification-content">
+      <div class="zip-spinner"></div>
+      <div class="zip-notification-text">
+        <div class="zip-notification-title">Creating ZIP archive...</div>
+        <div class="zip-notification-subtitle">Action Movies.zip</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Demo interactivity
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+      });
+    });
+
+    document.querySelectorAll('.nav-link').forEach(link => {
+      link.addEventListener('click', function(e) {
+        e.preventDefault();
+        document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+        this.classList.add('active');
+      });
+    });
+
+    // Toggle star on click
+    document.querySelectorAll('.card-footer .card-action[title="Star"]').forEach(star => {
+      star.addEventListener('click', function(e) {
+        e.stopPropagation();
+        this.textContent = this.textContent === '☆' ? '⭐' : '☆';
+      });
+    });
+
+    // Close modal on click
+    document.querySelector('.modal-close')?.addEventListener('click', () => {
+      document.getElementById('deleteModal').classList.remove('show');
+    });
+
+    document.querySelector('.btn-cancel')?.addEventListener('click', () => {
+      document.getElementById('deleteModal').classList.remove('show');
+    });
+  </script>
+
+</body>
+</html>

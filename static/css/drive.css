@@ -298,12 +298,22 @@ body {
     background: linear-gradient(135deg, rgba(185, 28, 28, 0.6), rgba(220, 38, 38, 0.4));
 }
 
-.folder-image {
-    background: linear-gradient(135deg, rgba(220, 38, 38, 0.08), rgba(185, 28, 28, 0.05));
+/* Folder cards - Bluish background */
+.folder-card .card-image {
+    background: linear-gradient(135deg, rgba(30, 58, 138, 0.4), rgba(37, 99, 235, 0.25));
 }
 
-.file-image {
-    background: linear-gradient(135deg, var(--surface-hover), var(--bg));
+.folder-card:hover .card-image {
+    background: linear-gradient(135deg, rgba(37, 99, 235, 0.5), rgba(59, 130, 246, 0.35));
+}
+
+/* File cards - Reddish/burgundy background */
+.file-card .card-image {
+    background: linear-gradient(135deg, rgba(127, 29, 29, 0.4), rgba(153, 27, 27, 0.25));
+}
+
+.file-card:hover .card-image {
+    background: linear-gradient(135deg, rgba(185, 28, 28, 0.5), rgba(220, 38, 38, 0.35));
 }
 
 .card-body {

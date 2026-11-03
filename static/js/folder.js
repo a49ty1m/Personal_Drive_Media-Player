@@ -28,13 +28,13 @@ async function createFolder() {
     const folderName = input.value.trim();
     
     if (!folderName) {
-        alert('Please enter a folder name');
+        showNotification('⚠ Please enter a folder name', 'warning');
         return;
     }
     
     // Validate folder name (no special characters that could cause issues)
     if (!/^[a-zA-Z0-9_\-\.\s]+$/.test(folderName)) {
-        alert('Folder name contains invalid characters');
+        showNotification('⚠ Folder name contains invalid characters', 'warning');
         return;
     }
     
@@ -55,19 +55,19 @@ async function createFolder() {
         const data = await response.json();
         
         if (response.ok) {
-            alert(data.message || 'Folder created successfully');
+            showNotification('✓ ' + (data.message || 'Folder created successfully'), 'success');
             closeFolderModal();
             
             // Reload page to show new folder
             setTimeout(() => {
                 window.location.reload();
-            }, 500);
+            }, 800);
         } else {
-            alert(data.message || 'Failed to create folder');
+            showNotification('✗ ' + (data.message || 'Failed to create folder'), 'error');
         }
     } catch (error) {
         console.error('Error creating folder:', error);
-        alert('Network error while creating folder');
+        showNotification('✗ Network error while creating folder', 'error');
     }
 }
 
@@ -92,3 +92,48 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+
+/**
+ * Show notification (reuse ZIP notification element)
+ */
+function showNotification(message, type) {
+    const notification = document.getElementById('zipNotification');
+    if (!notification) {
+        console.error('Notification element not found');
+        return;
+    }
+    
+    const titleEl = notification.querySelector('.zip-notification-title');
+    const subtitleEl = notification.querySelector('.zip-notification-subtitle');
+    const spinner = notification.querySelector('.zip-spinner');
+    
+    if (!titleEl || !subtitleEl || !spinner) {
+        console.error('Notification elements not found');
+        return;
+    }
+    
+    // Hide spinner for success/error/warning
+    spinner.style.display = 'none';
+    
+    titleEl.textContent = message;
+    subtitleEl.textContent = '';
+    
+    if (type === 'success') {
+        titleEl.style.color = '#10b981';
+    } else if (type === 'error') {
+        titleEl.style.color = '#ef4444';
+    } else if (type === 'warning') {
+        titleEl.style.color = '#f59e0b';
+    }
+    
+    notification.classList.add('show');
+    
+    setTimeout(() => {
+        notification.classList.remove('show');
+        // Reset styles
+        setTimeout(() => {
+            spinner.style.display = 'block';
+            titleEl.style.color = '#e0e0e0';
+        }, 300);
+    }, 2500);
+}

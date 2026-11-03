@@ -58,7 +58,7 @@ function showUploadModal() {
             if (uploadModal) {
                 openUploadModal();
             } else {
-                alert('Upload is loading, please try again in a moment.');
+                showNotification('⚠ Upload is loading, please try again in a moment.', 'warning');
             }
         }, 100);
         return;
@@ -218,20 +218,26 @@ async function startUpload() {
         xhr.onload = () => {
             if (xhr.status === 200) {
                 const result = JSON.parse(xhr.responseText);
-                alert(result.message);
                 if (result.success) {
-                    location.reload();
+                    showNotification('✓ ' + result.message, 'success');
+                    setTimeout(() => location.reload(), 800);
+                } else {
+                    showNotification('✗ ' + result.message, 'error');
                 }
             } else {
-                const error = JSON.parse(xhr.responseText);
-                alert('Upload failed: ' + error.message);
+                try {
+                    const error = JSON.parse(xhr.responseText);
+                    showNotification('✗ Upload failed: ' + error.message, 'error');
+                } catch (e) {
+                    showNotification('✗ Upload failed', 'error');
+                }
             }
             uploadButton.disabled = false;
             uploadProgress.classList.add('hidden');
         };
         
         xhr.onerror = () => {
-            alert('Upload failed. Please try again.');
+            showNotification('✗ Upload failed. Please try again.', 'error');
             uploadButton.disabled = false;
             uploadProgress.classList.add('hidden');
         };
@@ -240,7 +246,7 @@ async function startUpload() {
         xhr.send(formData);
         
     } catch (error) {
-        alert('Upload error: ' + error.message);
+        showNotification('✗ Upload error: ' + error.message, 'error');
         uploadButton.disabled = false;
         uploadProgress.classList.add('hidden');
     }
@@ -278,6 +284,51 @@ function formatFileSize(bytes) {
     const sizes = ['B', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+}
+
+/**
+ * Show notification (reuse ZIP notification element)
+ */
+function showNotification(message, type) {
+    const notification = document.getElementById('zipNotification');
+    if (!notification) {
+        console.error('Notification element not found');
+        return;
+    }
+    
+    const titleEl = notification.querySelector('.zip-notification-title');
+    const subtitleEl = notification.querySelector('.zip-notification-subtitle');
+    const spinner = notification.querySelector('.zip-spinner');
+    
+    if (!titleEl || !subtitleEl || !spinner) {
+        console.error('Notification elements not found');
+        return;
+    }
+    
+    // Hide spinner for success/error/warning
+    spinner.style.display = 'none';
+    
+    titleEl.textContent = message;
+    subtitleEl.textContent = '';
+    
+    if (type === 'success') {
+        titleEl.style.color = '#10b981';
+    } else if (type === 'error') {
+        titleEl.style.color = '#ef4444';
+    } else if (type === 'warning') {
+        titleEl.style.color = '#f59e0b';
+    }
+    
+    notification.classList.add('show');
+    
+    setTimeout(() => {
+        notification.classList.remove('show');
+        // Reset styles
+        setTimeout(() => {
+            spinner.style.display = 'block';
+            titleEl.style.color = '#e0e0e0';
+        }, 300);
+    }, 2500);
 }
 
 // Make functions globally accessible

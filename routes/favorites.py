@@ -65,7 +65,12 @@ def save_recent(recent_list):
 
 
 def add_to_recent(file_path):
-    """Add a file to recent list."""
+    """Add a file to recent list (files only, no folders)."""
+    # Safety check: Only add files, not folders
+    full_path = safe_join(config.MEDIA_ROOT, file_path)
+    if not os.path.isfile(full_path):
+        return  # Skip if it's a folder or doesn't exist
+    
     recent = load_recent()
     
     # Remove if already exists
@@ -133,18 +138,27 @@ def starred():
 
 @favorites_bp.route("/recent/")
 def recent():
-    """Show recently accessed files."""
+    """Show recently accessed files (files only, no folders)."""
     recent_list = load_recent()
     
-    # Build file items
+    # Build file items (and clean up any folders that might be in the list)
     file_items = []
+    cleaned_recent = []
+    
     for item in recent_list:
         file_path = item['path']
         full_path = safe_join(config.MEDIA_ROOT, file_path)
         
+        # Skip if it's a folder
+        if os.path.isdir(full_path):
+            continue
+        
         # Check if file still exists
         if not os.path.isfile(full_path):
             continue
+        
+        # Keep in cleaned list
+        cleaned_recent.append(item)
         
         _, ext = os.path.splitext(full_path)
         icon = get_file_icon(ext)
@@ -160,6 +174,10 @@ def recent():
             "is_video": is_video,
             "extension": ext,
         })
+    
+    # Save cleaned list if it changed
+    if len(cleaned_recent) != len(recent_list):
+        save_recent(cleaned_recent)
     
     return render_template(
         "browse.html",

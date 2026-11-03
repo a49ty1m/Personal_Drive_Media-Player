@@ -188,41 +188,204 @@
     </div>
   </main>
 
-  <!-- Delete Confirmation Modal -->
-  <div id="deleteModal" class="modal show">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2>🗑️ Confirm Delete</h2>
-        <button class="modal-close">&times;</button>
+  <!-- All Modals and Notifications Displayed Below -->
+  <div style="padding: 40px; background: #0a0a0a; min-height: 100vh;">
+    <h2 style="text-align: center; color: #dc2626; margin-bottom: 40px; font-size: 32px; text-transform: uppercase; letter-spacing: 2px;">📦 All Modal Windows</h2>
+    
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(500px, 1fr)); gap: 40px; max-width: 1400px; margin: 0 auto;">
+      
+      <!-- Delete Confirmation Modal -->
+      <div style="background: rgba(30, 30, 30, 0.8); padding: 20px; border-radius: 16px; border: 1px solid #333;">
+        <h3 style="color: #e0e0e0; margin-bottom: 20px; text-align: center;">🗑️ Delete Confirmation</h3>
+        <div class="modal-content" style="position: relative; display: block; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; width: 100%; max-width: none; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(220, 38, 38, 0.1); overflow: hidden;">
+          <div class="modal-header">
+            <h2>🗑️ Confirm Delete</h2>
+            <button class="modal-close">&times;</button>
+          </div>
+          <div class="modal-body">
+            <p style="color: #e0e0e0; line-height: 1.6;">
+              Are you sure you want to delete <strong>"Inception.mkv"</strong>?
+            </p>
+            <p style="color: #ef4444; margin-top: 15px; font-weight: 500;">
+              ⚠️ This action cannot be undone!
+            </p>
+          </div>
+          <div class="modal-footer">
+            <button class="btn-cancel">Cancel</button>
+            <button class="btn-danger">Delete</button>
+          </div>
+        </div>
       </div>
-      <div class="modal-body">
-        <p style="color: #e0e0e0; line-height: 1.6;">
-          Are you sure you want to delete <strong>"Inception.mkv"</strong>?
-        </p>
-        <p style="color: #ef4444; margin-top: 15px; font-weight: 500;">
-          ⚠️ This action cannot be undone!
-        </p>
-      </div>
-      <div class="modal-footer">
-        <button class="btn-cancel">Cancel</button>
-        <button class="btn-danger">Delete</button>
-      </div>
-    </div>
-  </div>
 
-  <!-- ZIP Progress Notification -->
-  <div id="zipNotification" class="zip-notification show">
-    <div class="zip-notification-content">
-      <div class="zip-spinner"></div>
-      <div class="zip-notification-text">
-        <div class="zip-notification-title">Creating ZIP archive...</div>
-        <div class="zip-notification-subtitle">Action Movies.zip</div>
+      <!-- Upload Modal -->
+      <div style="background: rgba(30, 30, 30, 0.8); padding: 20px; border-radius: 16px; border: 1px solid #333;">
+        <h3 style="color: #e0e0e0; margin-bottom: 20px; text-align: center;">📤 Upload Files</h3>
+        <div class="modal-content" style="position: relative; display: block; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; width: 100%; max-width: none; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(220, 38, 38, 0.1); overflow: hidden;">
+          <div class="modal-header">
+            <h2>Upload Files</h2>
+            <button class="modal-close">&times;</button>
+          </div>
+          <div class="modal-body">
+            <div class="upload-zone" id="uploadZone">
+              <div class="upload-icon">📁</div>
+              <p>Drag & drop files here or click to browse</p>
+              <p class="upload-limit">Max size: 100 MB per file</p>
+            </div>
+            <div id="fileList" class="file-list-upload">
+              <h3>Selected Files:</h3>
+              <div class="file-item-upload">
+                <span class="file-icon">📎</span>
+                <span class="file-name">movie.mkv</span>
+                <span class="file-size">2.4 GB</span>
+              </div>
+              <div class="file-item-upload">
+                <span class="file-icon">📎</span>
+                <span class="file-name">subtitle.srt</span>
+                <span class="file-size">45 KB</span>
+              </div>
+            </div>
+            <div id="uploadProgress" class="upload-progress">
+              <div class="progress-bar">
+                <div class="progress-fill" style="width: 65%;"></div>
+              </div>
+              <p id="progressText">Uploading... 65%</p>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn-cancel">Cancel</button>
+            <button class="btn-primary">Upload</button>
+          </div>
+        </div>
       </div>
+
+      <!-- Rename Modal -->
+      <div style="background: rgba(30, 30, 30, 0.8); padding: 20px; border-radius: 16px; border: 1px solid #333;">
+        <h3 style="color: #e0e0e0; margin-bottom: 20px; text-align: center;">✏️ Rename Item</h3>
+        <div class="modal-content" style="position: relative; display: block; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; width: 100%; max-width: none; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(220, 38, 38, 0.1); overflow: hidden;">
+          <div class="modal-header">
+            <h2>✏️ Rename Item</h2>
+            <button class="modal-close">&times;</button>
+          </div>
+          <div class="modal-body">
+            <div class="form-group">
+              <label for="renameInput">New Name:</label>
+              <input type="text" id="renameInput" placeholder="Enter new name..." value="Inception.mkv" autocomplete="off">
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn-cancel">Cancel</button>
+            <button class="btn-primary">Rename</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Create Folder Modal -->
+      <div style="background: rgba(30, 30, 30, 0.8); padding: 20px; border-radius: 16px; border: 1px solid #333;">
+        <h3 style="color: #e0e0e0; margin-bottom: 20px; text-align: center;">📁 Create New Folder</h3>
+        <div class="modal-content" style="position: relative; display: block; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; width: 100%; max-width: none; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(220, 38, 38, 0.1); overflow: hidden;">
+          <div class="modal-header">
+            <h2>📁 Create New Folder</h2>
+            <button class="modal-close">&times;</button>
+          </div>
+          <div class="modal-body">
+            <div class="form-group">
+              <label for="folderNameInput">Folder Name:</label>
+              <input type="text" id="folderNameInput" placeholder="Enter folder name..." autocomplete="off">
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn-cancel">Cancel</button>
+            <button class="btn-primary">Create</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Notifications Section -->
+    <h2 style="text-align: center; color: #dc2626; margin: 80px 0 40px; font-size: 32px; text-transform: uppercase; letter-spacing: 2px;">🔔 All Notifications</h2>
+    
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 30px; max-width: 1400px; margin: 0 auto;">
+      
+      <!-- ZIP Progress Notification -->
+      <div style="background: rgba(30, 30, 30, 0.8); padding: 30px; border-radius: 16px; border: 1px solid #333;">
+        <h3 style="color: #e0e0e0; margin-bottom: 20px; text-align: center;">📦 ZIP Progress</h3>
+        <div class="zip-notification show" style="position: relative; transform: none; bottom: auto; right: auto;">
+          <div class="zip-notification-content">
+            <div class="zip-spinner"></div>
+            <div class="zip-notification-text">
+              <div class="zip-notification-title">Creating ZIP archive...</div>
+              <div class="zip-notification-subtitle">Action Movies.zip</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Success Notification -->
+      <div style="background: rgba(30, 30, 30, 0.8); padding: 30px; border-radius: 16px; border: 1px solid #333;">
+        <h3 style="color: #e0e0e0; margin-bottom: 20px; text-align: center;">✅ Success</h3>
+        <div class="zip-notification show" style="position: relative; transform: none; bottom: auto; right: auto;">
+          <div class="zip-notification-content">
+            <div class="zip-notification-text">
+              <div class="zip-notification-title" style="color: #10b981;">✓ Files uploaded successfully</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Error Notification -->
+      <div style="background: rgba(30, 30, 30, 0.8); padding: 30px; border-radius: 16px; border: 1px solid #333;">
+        <h3 style="color: #e0e0e0; margin-bottom: 20px; text-align: center;">❌ Error</h3>
+        <div class="zip-notification show" style="position: relative; transform: none; bottom: auto; right: auto;">
+          <div class="zip-notification-content">
+            <div class="zip-notification-text">
+              <div class="zip-notification-title" style="color: #ef4444;">✗ Upload failed: File too large</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Warning Notification -->
+      <div style="background: rgba(30, 30, 30, 0.8); padding: 30px; border-radius: 16px; border: 1px solid #333;">
+        <h3 style="color: #e0e0e0; margin-bottom: 20px; text-align: center;">⚠️ Warning</h3>
+        <div class="zip-notification show" style="position: relative; transform: none; bottom: auto; right: auto;">
+          <div class="zip-notification-content">
+            <div class="zip-notification-text">
+              <div class="zip-notification-title" style="color: #f59e0b;">⚠ Please enter a folder name</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Delete Success Notification -->
+      <div style="background: rgba(30, 30, 30, 0.8); padding: 30px; border-radius: 16px; border: 1px solid #333;">
+        <h3 style="color: #e0e0e0; margin-bottom: 20px; text-align: center;">🗑️ Delete Success</h3>
+        <div class="zip-notification show" style="position: relative; transform: none; bottom: auto; right: auto;">
+          <div class="zip-notification-content">
+            <div class="zip-notification-text">
+              <div class="zip-notification-title" style="color: #10b981;">✓ File deleted successfully</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Folder Created Notification -->
+      <div style="background: rgba(30, 30, 30, 0.8); padding: 30px; border-radius: 16px; border: 1px solid #333;">
+        <h3 style="color: #e0e0e0; margin-bottom: 20px; text-align: center;">📁 Folder Created</h3>
+        <div class="zip-notification show" style="position: relative; transform: none; bottom: auto; right: auto;">
+          <div class="zip-notification-content">
+            <div class="zip-notification-text">
+              <div class="zip-notification-title" style="color: #10b981;">✓ Folder created successfully</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
   </div>
 
   <script>
-    // Demo interactivity
+    // Demo interactivity for gallery section only
     document.querySelectorAll('.filter-btn').forEach(btn => {
       btn.addEventListener('click', function() {
         document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
@@ -244,15 +407,6 @@
         e.stopPropagation();
         this.textContent = this.textContent === '☆' ? '⭐' : '☆';
       });
-    });
-
-    // Close modal on click
-    document.querySelector('.modal-close')?.addEventListener('click', () => {
-      document.getElementById('deleteModal').classList.remove('show');
-    });
-
-    document.querySelector('.btn-cancel')?.addEventListener('click', () => {
-      document.getElementById('deleteModal').classList.remove('show');
     });
   </script>
 

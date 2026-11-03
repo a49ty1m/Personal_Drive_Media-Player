@@ -4,6 +4,8 @@ A lightweight, feature-rich media server and personal cloud storage solution tha
 
 > **No proot, no Docker, no systemd** — pure Python + FFmpeg running directly in Termux.
 
+![Gallery View](demo_images/gallery-view.png)
+
 ---
 
 ## ✨ Features Overview
@@ -59,6 +61,37 @@ A lightweight, feature-rich media server and personal cloud storage solution tha
 
 ---
 
+## 📸 Screenshots
+
+### Gallery View
+Beautiful card-based layout with bluish folders and reddish file backgrounds.
+
+![Gallery View](demo_images/gallery-view.png)
+
+### File Cards & Actions
+Star, download, and manage files with 3-dot menus and quick actions.
+
+![File Cards](demo_images/file-cards-actions.png)
+
+### Modal Windows
+Clean modal dialogs for upload, rename, delete, and folder creation.
+
+![Modal Windows](demo_images/modals-overview.png)
+
+### Delete Confirmation
+Custom delete confirmation with warning message.
+
+![Delete Modal](demo_images/delete-confirmation.png)
+
+### All UI Components
+Complete showcase of modals and notifications.
+
+![All Components](demo_images/all-components.png)
+
+> **Note:** Video player UI screenshots require an actual video stream and will be added when the server is running with media files.
+
+---
+
 ## 🎨 UI Demo
 
 Want to see the interface without running the full server? Check out the standalone demo:
@@ -74,8 +107,11 @@ The demo includes:
 - ✅ Sample content (folders, videos, images, documents)
 - ✅ Modal dialogs and notifications
 - ✅ No backend required - pure HTML/CSS/JS
+- ❌ Video player not included (requires backend + HLS.js)
 
 Perfect for screenshots, design demos, or testing the UI on different devices!
+
+**Note:** The video player with HLS streaming can only be seen by running the full server and playing an actual video file.
 
 ---
 

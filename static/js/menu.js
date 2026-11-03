@@ -26,43 +26,66 @@ function clickFile(fileId) {
  */
 function toggleMenu(event, fileId) {
     event.stopPropagation();
+    event.preventDefault();
+    
     const menuId = 'menu-' + fileId;
     const menu = document.getElementById(menuId);
     const button = event.currentTarget;
     
-    // Close all other menus
+    if (!menu || !button) {
+        console.error('Menu or button not found:', menuId);
+        return;
+    }
+    
+    // Check if this menu is already open
+    const isCurrentlyOpen = menu.classList.contains('show');
+    
+    // Close all menus first
     document.querySelectorAll('.dropdown-menu').forEach(m => {
-        if (m.id !== menuId) {
-            m.classList.remove('show');
-            m.classList.remove('open-up');
-        }
+        m.classList.remove('show');
+        m.classList.remove('open-up');
+        m.style.left = '';
+        m.style.top = '';
     });
     
-    // Toggle current menu
-    const isOpening = !menu.classList.contains('show');
-    menu.classList.toggle('show');
-    
-    if (isOpening) {
-        // Reset positioning classes
-        menu.classList.remove('open-up');
-        
-        // Position the menu
+    // If the menu was closed, open it
+    if (!isCurrentlyOpen) {
+        // Position the menu BEFORE showing it
         positionMenu(menu, button);
+        
+        // Show menu after positioning
+        menu.classList.add('show');
     }
+    // If it was open, it's now closed (we removed 'show' above)
 }
 
 /**
  * Smart positioning: position fixed menu relative to button
  */
 function positionMenu(menu, button) {
+    // If menu already has position set and is visible, don't recalculate
+    if (menu.style.left && menu.style.top && menu.classList.contains('show')) {
+        return;
+    }
+    
     const buttonRect = button.getBoundingClientRect();
     const viewportHeight = window.innerHeight;
     const viewportWidth = window.innerWidth;
     const menuWidth = 180;
+    const menuHeight = 150; // Approximate menu height
     
-    // Position menu to the right edge of the button, opening downward
+    // Position menu to align with the right edge of the button, opening downward
     let left = buttonRect.right - menuWidth;
     let top = buttonRect.bottom + 5;
+    
+    // Check if menu would go off bottom
+    if (top + menuHeight > viewportHeight - 20) {
+        // Open upward instead
+        top = buttonRect.top - menuHeight - 5;
+        menu.classList.add('open-up');
+    } else {
+        menu.classList.remove('open-up');
+    }
     
     // Ensure menu doesn't go off the right edge
     if (left < 10) {
@@ -74,22 +97,9 @@ function positionMenu(menu, button) {
         left = viewportWidth - menuWidth - 10;
     }
     
-    // Apply initial position
+    // Apply position
     menu.style.left = left + 'px';
     menu.style.top = top + 'px';
-    
-    // Wait for render to get accurate height
-    setTimeout(() => {
-        const menuRect = menu.getBoundingClientRect();
-        const spaceBelow = viewportHeight - menuRect.bottom;
-        const spaceAbove = buttonRect.top;
-        
-        // If not enough space below and more space above, open upward
-        if (spaceBelow < 10 && spaceAbove > menuRect.height + 10) {
-            menu.style.top = (buttonRect.top - menuRect.height - 5) + 'px';
-            menu.classList.add('open-up');
-        }
-    }, 10);
 }
 
 /**
@@ -99,6 +109,9 @@ function closeMenu() {
     document.querySelectorAll('.dropdown-menu').forEach(menu => {
         menu.classList.remove('show');
         menu.classList.remove('open-up');
+        // Clear inline positioning so next open recalculates
+        menu.style.left = '';
+        menu.style.top = '';
     });
 }
 

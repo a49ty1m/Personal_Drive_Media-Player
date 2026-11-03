@@ -84,6 +84,7 @@
 
 .file-item:has(.dropdown-menu.show) {
     z-index: 100;
+    transform: none !important;
 }
 
 /* File Icons and Info */

@@ -80,7 +80,7 @@ def rename_item():
         }), 404
     
     # Prevent renaming MEDIA_ROOT itself
-    if os.path.abspath(old_full_path) == os.path.abspath(config.MEDIA_ROOT):
+    if os.path.realpath(old_full_path) == os.path.realpath(config.MEDIA_ROOT):
         return jsonify({
             "success": False,
             "message": "Cannot rename the root media directory."

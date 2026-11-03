@@ -9,7 +9,7 @@ function showCreateFolderModal() {
     
     if (modal && input) {
         input.value = '';
-        modal.style.display = 'flex';
+        modal.classList.add('show');
         input.focus();
     }
 }
@@ -18,7 +18,7 @@ function showCreateFolderModal() {
 function closeFolderModal() {
     const modal = document.getElementById('folderModal');
     if (modal) {
-        modal.style.display = 'none';
+        modal.classList.remove('show');
     }
 }
 
@@ -92,48 +92,3 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
-
-/**
- * Show notification (reuse ZIP notification element)
- */
-function showNotification(message, type) {
-    const notification = document.getElementById('zipNotification');
-    if (!notification) {
-        console.error('Notification element not found');
-        return;
-    }
-    
-    const titleEl = notification.querySelector('.zip-notification-title');
-    const subtitleEl = notification.querySelector('.zip-notification-subtitle');
-    const spinner = notification.querySelector('.zip-spinner');
-    
-    if (!titleEl || !subtitleEl || !spinner) {
-        console.error('Notification elements not found');
-        return;
-    }
-    
-    // Hide spinner for success/error/warning
-    spinner.style.display = 'none';
-    
-    titleEl.textContent = message;
-    subtitleEl.textContent = '';
-    
-    if (type === 'success') {
-        titleEl.style.color = '#10b981';
-    } else if (type === 'error') {
-        titleEl.style.color = '#ef4444';
-    } else if (type === 'warning') {
-        titleEl.style.color = '#f59e0b';
-    }
-    
-    notification.classList.add('show');
-    
-    setTimeout(() => {
-        notification.classList.remove('show');
-        // Reset styles
-        setTimeout(() => {
-            spinner.style.display = 'block';
-            titleEl.style.color = '#e0e0e0';
-        }, 300);
-    }, 2500);
-}

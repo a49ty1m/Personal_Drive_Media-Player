@@ -2,8 +2,6 @@
  * upload.js - File upload functionality
  */
 
-console.log('✓ upload.js loaded successfully');
-
 // Upload modal state
 let uploadModal = null;
 let currentPath = "";
@@ -49,11 +47,9 @@ function initUpload() {
  * Show upload modal (called from HTML button)
  */
 function showUploadModal() {
-    console.log('showUploadModal called, uploadModal exists:', !!uploadModal);
     
     // If modal doesn't exist yet, wait a bit and try again
     if (!uploadModal) {
-        console.log('Modal not ready, waiting...');
         setTimeout(() => {
             if (uploadModal) {
                 openUploadModal();
@@ -284,51 +280,6 @@ function formatFileSize(bytes) {
     const sizes = ['B', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
-}
-
-/**
- * Show notification (reuse ZIP notification element)
- */
-function showNotification(message, type) {
-    const notification = document.getElementById('zipNotification');
-    if (!notification) {
-        console.error('Notification element not found');
-        return;
-    }
-    
-    const titleEl = notification.querySelector('.zip-notification-title');
-    const subtitleEl = notification.querySelector('.zip-notification-subtitle');
-    const spinner = notification.querySelector('.zip-spinner');
-    
-    if (!titleEl || !subtitleEl || !spinner) {
-        console.error('Notification elements not found');
-        return;
-    }
-    
-    // Hide spinner for success/error/warning
-    spinner.style.display = 'none';
-    
-    titleEl.textContent = message;
-    subtitleEl.textContent = '';
-    
-    if (type === 'success') {
-        titleEl.style.color = '#10b981';
-    } else if (type === 'error') {
-        titleEl.style.color = '#ef4444';
-    } else if (type === 'warning') {
-        titleEl.style.color = '#f59e0b';
-    }
-    
-    notification.classList.add('show');
-    
-    setTimeout(() => {
-        notification.classList.remove('show');
-        // Reset styles
-        setTimeout(() => {
-            spinner.style.display = 'block';
-            titleEl.style.color = '#e0e0e0';
-        }, 300);
-    }, 2500);
 }
 
 // Make functions globally accessible

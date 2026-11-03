@@ -273,6 +273,9 @@ class TranscodeJob:
         self.current_segment = 0
         self.total_segments  = 0
         self.duration        = 0.0
+        
+        # Restart counter to prevent stale monitor threads
+        self._restart_id = 0
 
         # Thread-safe state
         self._lock    = threading.Lock()
@@ -716,18 +719,27 @@ class TranscodeManager:
         This runs in a background thread and helps decide whether to
         wait for a segment or restart FFmpeg when the user seeks.
         """
+        # Capture the restart ID at the start of monitoring
+        my_restart_id = job._restart_id
+        
         video_dir = os.path.join(job.output_dir, "video")
         current = start_segment
         
         while video_proc.poll() is None:
+            # Exit if job was restarted (ID changed)
+            if my_restart_id != job._restart_id:
+                logger.debug("Monitor thread exiting (job restarted): %s", job.video_id)
+                return
+            
             seg_path = os.path.join(video_dir, f"seg_{current:03d}.ts")
             if os.path.exists(seg_path):
                 job.update_position(current)
                 current += 1
             time.sleep(0.5)
         
-        # Final update after process ends
-        job.update_position(current)
+        # Final update after process ends (only if not restarted)
+        if my_restart_id == job._restart_id:
+            job.update_position(current)
     
     def _restart_at_position(self, job: TranscodeJob, start_time: float) -> None:
         """
@@ -736,6 +748,9 @@ class TranscodeManager:
         """
         logger.info("Killing current transcode and restarting at %.1fs: %s",
                     start_time, job.video_id)
+        
+        # Increment restart ID to invalidate old monitor threads
+        job._restart_id += 1
         
         # Kill all running processes
         job.kill_all_processes()
@@ -799,14 +814,22 @@ class TranscodeManager:
                 if total_size <= config.MAX_CACHE_SIZE:
                     break
                 
+                # Skip if this folder is currently active
+                video_id = os.path.basename(folder_path)
+                with self._registry_lock:
+                    if video_id in self._registry:
+                        logger.debug("Skipping active job during LRU cleanup: %s", video_id)
+                        continue
+                
                 try:
                     shutil.rmtree(folder_path)
                     total_size -= folder_size
                     logger.info("Deleted cached folder (LRU): %s (freed %.1f MB)",
-                               os.path.basename(folder_path),
+                               video_id,
                                folder_size / (1024*1024))
                 except OSError as exc:
-                    logger.warning("Could not delete %s: %s", folder_path, exc)
+                    logger.warning("Could not delete cache folder %s: %s",
+                                  video_id, exc)
             
             logger.info("Cache cleanup complete. New size: %.1f MB",
                        total_size / (1024*1024))

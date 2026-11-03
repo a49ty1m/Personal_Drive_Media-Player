@@ -371,13 +371,14 @@ media-server/
 │   └── (profiles.py removed)  # Dead code eliminated
 │
 ├── routes/
-│   ├── browse.py              # File browser
+│   ├── browse.py              # File browser & folder ZIP download
 │   ├── playback.py            # Video player & HLS streaming
 │   ├── api.py                 # Status API
 │   ├── upload.py              # File upload API
 │   ├── delete.py              # File/folder deletion API
 │   ├── folder.py              # Folder creation API
-│   └── download.py            # File download & preview
+│   ├── rename.py              # File/folder rename API
+│   └── favorites.py           # Starred files and recent tracking
 │
 ├── templates/
 │   ├── base.html              # Base template
@@ -486,9 +487,10 @@ media-server/
 - File size validation before upload
 
 ### XSS Prevention
-- All user inputs properly escaped in templates
-- File names sanitized before display
-- No inline script execution
+- File names sanitized before display in modals and notifications
+- User-generated filenames in onclick attributes use server-side escaping
+- Preview modals use `textContent` and `createElement` for user data
+- No script execution from file content
 
 ### Information Disclosure Prevention
 - Generic error messages (no filesystem paths exposed)
@@ -723,7 +725,6 @@ See [TESTING_GUIDE.md](TESTING_GUIDE.md) for comprehensive testing procedures co
 | 18 | LRU cache management (2GB cap) | ✅ Complete |
 | 19 | Direct-play (H.264/AAC) | 🔄 Planned |
 | 20 | Metadata/posters | 🔄 Planned |
-| 21 | Search functionality | 🔄 Planned |
 
 ---
 

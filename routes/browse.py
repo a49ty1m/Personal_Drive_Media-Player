@@ -5,9 +5,10 @@ Directory listing and folder download routes.
 """
 
 import os
-import io
+import tempfile
 import zipfile
 import urllib.parse
+import logging
 
 from flask import Blueprint, render_template, abort, redirect, url_for, send_file, request
 
@@ -15,6 +16,7 @@ import config
 from media.filesystem import safe_join, list_directory, get_file_icon, get_file_size, is_video_file
 
 browse_bp = Blueprint("browse", __name__)
+logger = logging.getLogger(__name__)
 
 
 @browse_bp.route("/")
@@ -119,33 +121,40 @@ def download_folder(path: str):
     if not os.path.isdir(folder_path):
         abort(404)
     
-    # Create ZIP file in memory
-    memory_file = io.BytesIO()
+    # Create ZIP file in temp directory (not RAM)
+    # delete=False so Flask can stream it, we'll clean up manually
+    temp_zip = tempfile.NamedTemporaryFile(mode='w+b', suffix='.zip', delete=False)
     
-    with zipfile.ZipFile(memory_file, 'w', zipfile.ZIP_DEFLATED) as zf:
-        # Walk through directory and add all files
-        for root, dirs, files in os.walk(folder_path):
-            for file in files:
-                file_path = os.path.join(root, file)
-                # Calculate relative path from the folder being zipped
-                arcname = os.path.relpath(file_path, folder_path)
-                try:
-                    zf.write(file_path, arcname)
-                except (OSError, ValueError) as e:
-                    # Skip files that can't be read
-                    print(f"Skipping {file_path}: {e}")
-                    continue
-    
-    # Seek to beginning of BytesIO buffer
-    memory_file.seek(0)
-    
-    # Get folder name for the ZIP filename
-    folder_name = os.path.basename(folder_path) if path else "media"
-    zip_filename = f"{folder_name}.zip"
-    
-    return send_file(
-        memory_file,
-        mimetype='application/zip',
-        as_attachment=True,
-        download_name=zip_filename
-    )
+    try:
+        with zipfile.ZipFile(temp_zip, 'w', zipfile.ZIP_DEFLATED) as zf:
+            # Walk through directory and add all files
+            for root, dirs, files in os.walk(folder_path):
+                for file in files:
+                    file_path = os.path.join(root, file)
+                    # Calculate relative path from the folder being zipped
+                    arcname = os.path.relpath(file_path, folder_path)
+                    try:
+                        zf.write(file_path, arcname)
+                    except (OSError, ValueError) as e:
+                        # Skip files that can't be read
+                        logger.warning("Skipping %s: %s", file_path, e)
+                        continue
+        
+        # Get folder name for the ZIP filename
+        folder_name = os.path.basename(folder_path) if path else "media"
+        zip_filename = f"{folder_name}.zip"
+        
+        # Send the temp file and let Flask clean it up after sending
+        return send_file(
+            temp_zip.name,
+            mimetype='application/zip',
+            as_attachment=True,
+            download_name=zip_filename
+        )
+    except Exception:
+        # Clean up temp file on error
+        try:
+            os.unlink(temp_zip.name)
+        except OSError:
+            pass
+        raise

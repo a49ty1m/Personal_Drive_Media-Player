@@ -12,15 +12,11 @@ function clickFile(fileId) {
     const isVideo = fileItem.dataset.isVideo === 'True' || fileItem.dataset.isVideo === 'true';
     const url = fileItem.dataset.url;
     
-    console.log('Clicked file:', {path, extension, isVideo, url});
-    
     if (isVideo) {
         // Play video in player
-        console.log('Opening video player');
         window.location.href = url;
     } else {
         // Preview other file types
-        console.log('Opening preview for:', extension);
         previewFile(path, extension);
     }
 }
@@ -37,7 +33,6 @@ function toggleMenu(event, fileId) {
     const button = event.currentTarget;
     
     if (!menu || !button) {
-        console.error('Menu or button not found:', menuId);
         return;
     }
     
@@ -174,10 +169,8 @@ function downloadFile(path, filename) {
  * Preview file based on type
  */
 function previewFile(path, extension) {
-    console.log('previewFile called - path:', path, 'extension:', extension);
     closeMenu();
     const ext = extension.toLowerCase();
-    console.log('Extension lowercased:', ext);
     
     // Check if it's a previewable type
     const imageTypes = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg', '.bmp', '.ico'];
@@ -186,20 +179,15 @@ function previewFile(path, extension) {
     const audioTypes = ['.mp3', '.wav', '.ogg', '.m4a', '.flac', '.aac'];
     
     if (imageTypes.includes(ext)) {
-        console.log('Detected as image type, calling previewImage');
         previewImage(path);
     } else if (textTypes.includes(ext)) {
-        console.log('Detected as text type, calling previewText');
         previewText(path);
     } else if (pdfTypes.includes(ext)) {
-        console.log('Detected as PDF type, calling previewPDFWithFallback');
         // Try to preview PDF, with fallback
         previewPDFWithFallback(path);
     } else if (audioTypes.includes(ext)) {
-        console.log('Detected as audio type, calling previewAudio');
         previewAudio(path);
     } else {
-        console.log('Type not recognized, showing not available message');
         // Not previewable, show message and download
         showPreviewNotAvailable(path, ext);
     }
@@ -268,7 +256,6 @@ function previewPDFWithFallback(path) {
  */
 function handlePDFLoad(iframe) {
     // PDF loaded successfully
-    console.log('PDF preview loaded');
 }
 
 /**
@@ -288,30 +275,22 @@ function handlePDFError() {
  * Preview image
  */
 function previewImage(path) {
-    console.log('previewImage called with path:', path);
-    
     const filename = path.split('/').pop();
     currentPreviewPath = path;
     currentPreviewFilename = filename;
     
-    console.log('Creating modal for filename:', filename);
     const modal = createPreviewModal(filename, false); // false = no zoom controls for images
-    console.log('Modal created:', modal);
     
     const downloadUrl = '/download/' + encodeURIComponent(path);
-    console.log('Download URL:', downloadUrl);
     
     modal.querySelector('.preview-content').innerHTML = `
         <img src="${downloadUrl}" alt="${escapeHtml(filename)}">
     `;
     
-    console.log('Appending modal to body');
     document.body.appendChild(modal);
     
-    console.log('Adding show class to modal');
     modal.classList.add('show');
     
-    console.log('Modal should now be visible. Modal classes:', modal.className);
 }
 
 /**
@@ -374,11 +353,8 @@ function previewAudio(path) {
  * Create preview modal
  */
 function createPreviewModal(filename, isPDF = false) {
-    console.log('createPreviewModal called for:', filename);
-    
     const modal = document.createElement('div');
     modal.className = 'modal preview-modal';
-    console.log('Modal element created with classes:', modal.className);
     
     modal.innerHTML = `
         <div class="modal-content">
@@ -397,7 +373,6 @@ function createPreviewModal(filename, isPDF = false) {
         </div>
     `;
     
-    console.log('Modal innerHTML set, returning modal');
     return modal;
 }
 

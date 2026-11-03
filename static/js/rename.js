@@ -24,7 +24,7 @@ function showRenameModal(path, name, type) {
         input.value = name;
         
         // Select filename without extension for files
-        modal.style.display = 'flex';
+        modal.classList.add('show');
         input.focus();
         
         if (type === 'file') {
@@ -44,7 +44,7 @@ function showRenameModal(path, name, type) {
 function closeRenameModal() {
     const modal = document.getElementById('renameModal');
     if (modal) {
-        modal.style.display = 'none';
+        modal.classList.remove('show');
     }
     renameTargetPath = '';
     renameTargetName = '';
@@ -57,12 +57,12 @@ async function performRename() {
     const newName = input.value.trim();
     
     if (!newName) {
-        alert('Please enter a name');
+        showNotification('⚠ Please enter a name', 'warning');
         return;
     }
     
     if (newName === renameTargetName) {
-        alert('New name is the same as the old name');
+        showNotification('⚠ New name is the same as the old name', 'warning');
         return;
     }
     
@@ -70,13 +70,13 @@ async function performRename() {
     const invalidChars = ['/', '\\', ':', '*', '?', '"', '<', '>', '|'];
     for (const char of invalidChars) {
         if (newName.includes(char)) {
-            alert(`Name cannot contain: ${invalidChars.join(' ')}`);
+            showNotification(`⚠ Name cannot contain: ${invalidChars.join(' ')}`, 'warning');
             return;
         }
     }
     
     if (newName.startsWith('.')) {
-        alert('Name cannot start with a dot');
+        showNotification('⚠ Name cannot start with a dot', 'warning');
         return;
     }
     
@@ -98,18 +98,18 @@ async function performRename() {
             closeRenameModal();
             
             // Show success message
-            alert(data.message || 'Renamed successfully');
+            showNotification('✓ ' + (data.message || 'Renamed successfully'), 'success');
             
             // Reload page to show renamed item
             setTimeout(() => {
                 window.location.reload();
-            }, 300);
+            }, 800);
         } else {
-            alert(data.message || 'Failed to rename');
+            showNotification('✗ ' + (data.message || 'Failed to rename'), 'error');
         }
     } catch (error) {
         console.error('Error renaming:', error);
-        alert('Network error while renaming');
+        showNotification('✗ Network error while renaming', 'error');
     }
 }
 

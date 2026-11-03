@@ -81,7 +81,7 @@ def delete_item():
         }), 404
     
     # Prevent deletion of MEDIA_ROOT itself
-    if os.path.abspath(full_path) == os.path.abspath(config.MEDIA_ROOT):
+    if os.path.realpath(full_path) == os.path.realpath(config.MEDIA_ROOT):
         return jsonify({
             "success": False,
             "message": "Cannot delete the root media directory."

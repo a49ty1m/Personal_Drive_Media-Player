@@ -14,6 +14,7 @@
     --border: rgba(220, 38, 38, 0.15);
     --text: #e6f1f5;
     --text-muted: #8b9ba8;
+    --text-dim: #888888;
 }
 
 /* ===== RESET & BASE ===== */

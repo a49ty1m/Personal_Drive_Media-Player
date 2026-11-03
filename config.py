@@ -149,8 +149,7 @@ LOG_DIR = os.path.join(_SERVER_DIR, "logs")
 
 # hls.js — must be placed at this path before running.
 # See README.md for the download command.
-_BASE_DIR  = os.path.dirname(os.path.abspath(__file__))
-HLS_JS_PATH = os.path.join(_BASE_DIR, "static", "js", "hls.min.js")
+HLS_JS_PATH = os.path.join(_APP_DIR, "static", "js", "hls.min.js")
 
 # ============================================================
 # FLASK

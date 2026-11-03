@@ -282,6 +282,10 @@ def main():
 
     # ---- Startup checks ----
     ok = startup_checks()
+    
+    # ---- Auto-cleanup cache on startup ----
+    logger.info("Clearing transcode cache on startup...")
+    cleanup_cache(full=True)
 
     local_ip = get_local_ip()
     url      = f"http://{local_ip}:{args.port}"

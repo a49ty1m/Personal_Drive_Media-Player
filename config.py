@@ -110,11 +110,17 @@ HLS_READY_TIMEOUT = int(os.environ.get("HLS_READY_TIMEOUT", "120"))
 # Polling interval (seconds) while waiting for first segment.
 HLS_POLL_INTERVAL = 0.25
 
-# When the browser seeks ahead of the current transcode position,
-# how long (seconds) to hold the HTTP request open waiting for that
-# segment to be created by FFmpeg.  120s is very generous; typical
-# wait is a few seconds even for large seeks.
-SEGMENT_WAIT_TIMEOUT = int(os.environ.get("SEGMENT_WAIT_TIMEOUT", "120"))
+# When the browser requests a segment that doesn't exist yet,
+# how long (seconds) to hold the HTTP request open waiting for FFmpeg
+# to create it.  If the segment doesn't appear within this timeout,
+# the current transcode job is killed and restarted at the requested position.
+SEGMENT_WAIT_TIMEOUT = int(os.environ.get("SEGMENT_WAIT_TIMEOUT", "30"))
+
+# Maximum total cache size in bytes (default: 2 GB).
+# When cache exceeds this limit after a transcode completes, the least
+# recently accessed video folders are deleted until under the cap.
+# Set to 0 to disable automatic cleanup.
+MAX_CACHE_SIZE = int(os.environ.get("MAX_CACHE_SIZE", str(2 * 1024 * 1024 * 1024)))
 
 # ============================================================
 # PATHS

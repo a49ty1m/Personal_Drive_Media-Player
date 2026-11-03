@@ -29,48 +29,84 @@ def build_video_command(
     source: str,
     output_dir: str,
     media_info: MediaInfo,
+    start_time: float = 0.0,
+    start_segment: int = 0,
 ) -> list:
     """
-    Build FFmpeg command for video-only HLS.
+    Build FFmpeg command for video-only HLS with optional seek support.
+    
+    Args:
+        source: Path to source video file
+        output_dir: Base output directory
+        media_info: Metadata from ffprobe
+        start_time: Seek to this timestamp (seconds) before transcoding
+        start_segment: Segment number to start with (start_time / HLS_SEGMENT_TIME)
+    
     Output goes to <output_dir>/video/stream.m3u8.
     No audio is included — audio is in separate playlists.
+    
+    When start_time > 0, FFmpeg:
+      - Seeks to start_time BEFORE reading (fast)
+      - Forces exact keyframes every 6s so segment math works
+      - Numbers segments starting from start_segment
+      - Offsets timestamps so the browser's timeline stays correct
     """
     video_dir = os.path.join(output_dir, "video")
     playlist  = os.path.join(video_dir, "ffmpeg.m3u8")   # internal; not served to browser
     seg_tmpl  = os.path.join(video_dir, "seg_%03d.ts")
 
-    cmd = [
-        "ffmpeg",
-        "-y",
-        "-i", source,
+    cmd = ["ffmpeg", "-y"]
+    
+    # SEEK BEFORE INPUT (instant seek, doesn't decode from 0)
+    if start_time > 0:
+        cmd.extend(["-ss", str(start_time)])
+    
+    cmd.extend(["-i", source])
 
-        # First video stream only
-        "-map", "0:v:0",
+    # First video stream only
+    cmd.extend(["-map", "0:v:0"])
 
-        # Ensure even dimensions (libx264 requirement)
-        "-vf", "scale=trunc(iw/2)*2:trunc(ih/2)*2",
+    # Ensure even dimensions (libx264 requirement)
+    cmd.extend(["-vf", "scale=trunc(iw/2)*2:trunc(ih/2)*2"])
 
-        # Universal H.264
+    # Universal H.264
+    cmd.extend([
         "-c:v",       config.VIDEO_CODEC,
         "-preset",    config.VIDEO_PRESET,
         "-crf",       str(config.VIDEO_CRF),
         "-profile:v", "high",
         "-level",     "4.1",
         "-pix_fmt",   "yuv420p",
+    ])
+    
+    # FORCE EXACT KEYFRAMES every HLS_SEGMENT_TIME seconds
+    # This ensures segment N always means "time N × segment_time"
+    # Without this, segments drift with natural keyframe positions
+    if start_time > 0:
+        cmd.extend([
+            "-force_key_frames",
+            f"expr:gte(t,n_forced*{config.HLS_SEGMENT_TIME})"
+        ])
 
-        # No audio in video stream
-        "-an",
+    # No audio in video stream
+    cmd.extend(["-an"])
 
-        # HLS output
+    # HLS output
+    cmd.extend([
         "-f",                    "hls",
         "-hls_time",             str(config.HLS_SEGMENT_TIME),
         "-hls_playlist_type",    "event",
         "-hls_segment_type",     "mpegts",
         "-hls_flags",            "independent_segments",
         "-hls_segment_filename", seg_tmpl,
+    ])
+    
+    # SEGMENT NUMBERING for resume/seek
+    if start_segment > 0:
+        cmd.extend(["-start_number", str(start_segment)])
+        cmd.extend(["-output_ts_offset", str(start_time)])
 
-        playlist,
-    ]
+    cmd.append(playlist)
 
     return cmd
 
@@ -83,9 +119,19 @@ def build_audio_command(
     source: str,
     output_dir: str,
     track_index: int,
+    start_time: float = 0.0,
+    start_segment: int = 0,
 ) -> list:
     """
-    Build FFmpeg command for a single audio track HLS.
+    Build FFmpeg command for a single audio track HLS with optional seek support.
+    
+    Args:
+        source: Path to source video file
+        output_dir: Base output directory
+        track_index: Which audio track to extract (0-indexed among audio streams)
+        start_time: Seek to this timestamp (seconds) before transcoding
+        start_segment: Segment number to start with
+    
     Output goes to <output_dir>/audio_<N>/stream.m3u8.
     No video is included.
     """
@@ -93,33 +139,44 @@ def build_audio_command(
     playlist  = os.path.join(audio_dir, "ffmpeg.m3u8")   # internal; not served to browser
     seg_tmpl  = os.path.join(audio_dir, "seg_%03d.ts")
 
-    cmd = [
-        "ffmpeg",
-        "-y",
-        "-i", source,
+    cmd = ["ffmpeg", "-y"]
+    
+    # SEEK BEFORE INPUT
+    if start_time > 0:
+        cmd.extend(["-ss", str(start_time)])
+    
+    cmd.extend(["-i", source])
 
-        # The Nth audio stream
-        "-map", f"0:a:{track_index}",
+    # The Nth audio stream
+    cmd.extend(["-map", f"0:a:{track_index}"])
 
-        # AAC stereo
+    # AAC stereo
+    cmd.extend([
         "-c:a",  config.AUDIO_CODEC,
         "-b:a",  config.AUDIO_BITRATE,
         "-ac",   config.AUDIO_CHANNELS,
         "-ar",   config.AUDIO_SAMPLE_RATE,
+    ])
 
-        # No video
-        "-vn",
+    # No video
+    cmd.extend(["-vn"])
 
-        # HLS output
+    # HLS output
+    cmd.extend([
         "-f",                    "hls",
         "-hls_time",             str(config.HLS_SEGMENT_TIME),
         "-hls_playlist_type",    "event",
         "-hls_segment_type",     "mpegts",
         "-hls_flags",            "independent_segments",
         "-hls_segment_filename", seg_tmpl,
+    ])
+    
+    # SEGMENT NUMBERING for resume/seek
+    if start_segment > 0:
+        cmd.extend(["-start_number", str(start_segment)])
+        cmd.extend(["-output_ts_offset", str(start_time)])
 
-        playlist,
-    ]
+    cmd.append(playlist)
 
     return cmd
 

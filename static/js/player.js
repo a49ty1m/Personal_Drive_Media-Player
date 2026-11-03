@@ -34,6 +34,7 @@
   var VIDEO_ID      = videoEl.dataset.videoId;
   var POLL_INTERVAL = 1500;
   var MAX_NET_ERRS  = 6;
+  var SAVE_INTERVAL = 5000;  // Save position every 5 seconds
 
   /* ----------------------------------------------------------
      State
@@ -42,6 +43,79 @@
   var hlsInstance   = null;
   var netErrCount   = 0;
   var myTextTracks  = [];   // TextTrack objects for our subtitle tracks
+  var saveTimer     = null;  // Timer for saving position
+
+  /* ==========================================================
+     POSITION SAVING & RESUME
+  ========================================================== */
+
+  function getStorageKey() {
+    return "video-position-" + VIDEO_ID;
+  }
+
+  function getSavedPosition() {
+    try {
+      var saved = localStorage.getItem(getStorageKey());
+      if (saved) {
+        var data = JSON.parse(saved);
+        // Only resume if saved within last 7 days
+        var age = Date.now() - data.timestamp;
+        if (age < 7 * 24 * 60 * 60 * 1000) {
+          return data.position;
+        }
+      }
+    } catch (e) {
+      console.warn("[Player] Could not load saved position:", e);
+    }
+    return 0;
+  }
+
+  function savePosition() {
+    if (!videoEl || videoEl.paused) return;
+    
+    try {
+      var position = videoEl.currentTime;
+      var duration = videoEl.duration;
+      
+      // Don't save if at the very end (within last 30 seconds)
+      if (duration && position > duration - 30) {
+        localStorage.removeItem(getStorageKey());
+        return;
+      }
+      
+      // Don't save positions less than 10 seconds
+      if (position < 10) return;
+      
+      localStorage.setItem(getStorageKey(), JSON.stringify({
+        position: position,
+        timestamp: Date.now()
+      }));
+      
+      console.log("[Player] Saved position:", Math.floor(position), "seconds");
+    } catch (e) {
+      console.warn("[Player] Could not save position:", e);
+    }
+  }
+
+  function startPositionSaving() {
+    // Save position every 5 seconds while playing
+    saveTimer = setInterval(function() {
+      if (!videoEl.paused) {
+        savePosition();
+      }
+    }, SAVE_INTERVAL);
+    
+    // Also save on pause and when leaving page
+    videoEl.addEventListener("pause", savePosition);
+    window.addEventListener("beforeunload", savePosition);
+  }
+
+  function stopPositionSaving() {
+    if (saveTimer) {
+      clearInterval(saveTimer);
+      saveTimer = null;
+    }
+  }
 
   /* ==========================================================
      UI helpers
@@ -268,6 +342,8 @@
       if (videoEl.canPlayType("application/vnd.apple.mpegurl")) {
         videoEl.src = url;
         setStatus("Playing (native HLS)", "active");
+        resumeFromSavedPosition();
+        startPositionSaving();
       } else {
         showOverlay(
           "hls.js was not loaded. See README.md \u2192 Installation \u2192 HLS.js.",
@@ -279,11 +355,14 @@
     }
 
     if (Hls.isSupported()) {
+      var savedPosition = getSavedPosition();
+      
       hlsInstance = new Hls({
         enableWorker:       true,
         maxBufferLength:    30,
         maxMaxBufferLength: 90,
         lowLatencyMode:     false,
+        startPosition:      savedPosition,  // Resume from saved position
       });
 
       hlsInstance.loadSource(url);
@@ -291,6 +370,18 @@
 
       hlsInstance.on(Hls.Events.MANIFEST_PARSED, function () {
         setStatus("Ready", "active");
+        
+        if (savedPosition > 0) {
+          console.log("[Player] Resuming from", Math.floor(savedPosition), "seconds");
+          showOverlay("Resuming from " + formatTime(savedPosition) + "\u2026");
+          
+          // Hide overlay after video starts playing
+          videoEl.addEventListener("playing", function() {
+            setTimeout(hideOverlay, 500);
+          }, { once: true });
+        }
+        
+        startPositionSaving();
       });
 
       hlsInstance.on(Hls.Events.AUDIO_TRACK_SWITCHED, function (event, data) {
@@ -319,6 +410,7 @@
               true
             );
             setStatus("Playback error: " + data.details, "error");
+            stopPositionSaving();
             hlsInstance.destroy();
             hlsInstance = null;
         }
@@ -327,6 +419,8 @@
     } else if (videoEl.canPlayType("application/vnd.apple.mpegurl")) {
       videoEl.src = url;
       setStatus("Playing (native HLS)", "active");
+      resumeFromSavedPosition();
+      startPositionSaving();
 
     } else {
       showOverlay(
@@ -335,6 +429,24 @@
       );
       setStatus("Browser unsupported", "error");
     }
+  }
+
+  function resumeFromSavedPosition() {
+    var savedPosition = getSavedPosition();
+    if (savedPosition > 0) {
+      console.log("[Player] Resuming from", Math.floor(savedPosition), "seconds");
+      videoEl.currentTime = savedPosition;
+      showOverlay("Resuming from " + formatTime(savedPosition) + "\u2026");
+      videoEl.addEventListener("playing", function() {
+        setTimeout(hideOverlay, 500);
+      }, { once: true });
+    }
+  }
+
+  function formatTime(seconds) {
+    var mins = Math.floor(seconds / 60);
+    var secs = Math.floor(seconds % 60);
+    return mins + ":" + (secs < 10 ? "0" : "") + secs;
   }
 
   /* ==========================================================

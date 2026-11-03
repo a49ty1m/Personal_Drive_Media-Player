@@ -266,6 +266,13 @@ class TranscodeJob:
 
         # All running Popen objects
         self.processes: list = []
+        
+        # NEW: Track current transcode position for smart seeking
+        # current_segment is the segment FFmpeg is currently working on
+        # (used to decide whether to wait for a segment or restart)
+        self.current_segment = 0
+        self.total_segments  = 0
+        self.duration        = 0.0
 
         # Thread-safe state
         self._lock    = threading.Lock()
@@ -298,6 +305,34 @@ class TranscodeJob:
             self._state   = state
             self._message = message
             self._error   = error
+    
+    def update_position(self, segment: int) -> None:
+        """Update the current transcode position (called by segment monitor)."""
+        with self._lock:
+            self.current_segment = segment
+    
+    def should_wait_for_segment(self, requested_segment: int) -> bool:
+        """
+        Decide if we should wait for a segment or restart FFmpeg.
+        
+        Returns True if the requested segment is within ~10 segments of
+        the current position (wait for it). Returns False if it's far
+        away (kill and restart at the new position).
+        """
+        with self._lock:
+            current = self.current_segment
+            # Wait if within 10 segments ahead
+            return requested_segment >= current and requested_segment <= current + 10
+    
+    def kill_all_processes(self) -> None:
+        """Kill all FFmpeg processes for this job."""
+        for proc in self.processes:
+            try:
+                proc.kill()
+                proc.wait(timeout=2)
+            except (OSError, Exception):
+                pass
+        self.processes = []
 
 
 # ============================================================
@@ -319,12 +354,29 @@ class TranscodeManager:
             relative_path.encode("utf-8")
         ).hexdigest()[:16]
 
-    def submit(self, relative_path: str, source_path: str) -> TranscodeJob:
+    def submit(
+        self, 
+        relative_path: str, 
+        source_path: str,
+        start_time: float = 0.0,
+    ) -> TranscodeJob:
         video_id = self.get_video_id(relative_path)
 
         with self._registry_lock:
             if video_id in self._registry:
-                return self._registry[video_id]
+                job = self._registry[video_id]
+                # If requesting a different start time and job is transcoding,
+                # restart at new position
+                if start_time > 0 and job.state == JobState.TRANSCODING:
+                    start_seg = int(start_time / config.HLS_SEGMENT_TIME)
+                    if not job.should_wait_for_segment(start_seg):
+                        logger.info(
+                            "Seek request to segment %d (time %.1fs), restarting transcode: %s",
+                            start_seg, start_time, video_id
+                        )
+                        self._restart_at_position(job, start_time)
+                return job
+            
             job = TranscodeJob(video_id=video_id, source_path=source_path)
             self._registry[video_id] = job
 
@@ -339,7 +391,7 @@ class TranscodeManager:
 
         t = threading.Thread(
             target=self._run,
-            args=(job,),
+            args=(job, start_time),
             daemon=True,
             name=f"transcode-{video_id}",
         )
@@ -414,17 +466,22 @@ class TranscodeManager:
     # Background transcoding
     # ----------------------------------------------------------
 
-    def _run(self, job: TranscodeJob) -> None:
+    def _run(self, job: TranscodeJob, start_time: float = 0.0) -> None:
         job.set_state(JobState.PENDING, "Waiting for a transcoding slot\u2026")
         self._semaphore.acquire()
         try:
-            self._transcode(job)
+            self._transcode(job, start_time)
         finally:
             self._semaphore.release()
+            # Cleanup cache if over limit
+            if config.MAX_CACHE_SIZE > 0:
+                self._cleanup_cache_if_needed()
 
-    def _transcode(self, job: TranscodeJob) -> None:
+    def _transcode(self, job: TranscodeJob, start_time: float = 0.0) -> None:
         try:
             os.makedirs(job.output_dir, exist_ok=True)
+            
+            start_segment = int(start_time / config.HLS_SEGMENT_TIME) if start_time > 0 else 0
 
             # ---- Probe ----
             job.set_state(JobState.TRANSCODING, "Analysing media\u2026")
@@ -438,6 +495,13 @@ class TranscodeManager:
                 raise RuntimeError("Source file contains no video stream.")
 
             streams = media_info.raw.get("streams", [])
+            
+            # Store duration and calculate total segments
+            job.duration = media_info.duration or 0.0
+            if job.duration > 0:
+                job.total_segments = max(1, math.ceil(job.duration / config.HLS_SEGMENT_TIME))
+            else:
+                job.total_segments = 0
 
             # ---- Extract track metadata ----
             audio_tracks    = _extract_audio_tracks(streams)
@@ -450,11 +514,12 @@ class TranscodeManager:
             self._save_json(job.sub_tracks_file, subtitle_tracks)
 
             logger.info(
-                "Codec: video=%s  audio=%s streams=%d  subtitles=%d (text-based)",
+                "Codec: video=%s  audio=%s streams=%d  subtitles=%d (text-based)%s",
                 media_info.video_codec,
                 media_info.audio_codec,
                 media_info.audio_streams,
                 len(subtitle_tracks),
+                f" | Starting at {start_time:.1f}s (segment {start_segment})" if start_time > 0 else "",
             )
 
             # ---- Create output subdirectories ----
@@ -464,11 +529,10 @@ class TranscodeManager:
             # No subdirectory needed for .vtt files — they go in output_dir directly
 
             # ---- Write pre-generated VOD playlists (full seekable timeline) ----
-            # Written BEFORE FFmpeg starts so the browser immediately has the
-            # complete seek bar.  Segment files are created by FFmpeg on demand;
-            # the route blocks requests for not-yet-created segments.
-            if media_info.duration:
-                _write_vod_playlist(
+            # Only write playlists on first run (start_time == 0)
+            # Subsequent seek restarts reuse existing playlists
+            if start_time == 0 and media_info.duration:
+                num_segs = _write_vod_playlist(
                     os.path.join(job.output_dir, "video", "stream.m3u8"),
                     media_info.duration,
                 )
@@ -477,7 +541,7 @@ class TranscodeManager:
                         os.path.join(job.output_dir, f"audio_{i}", "stream.m3u8"),
                         media_info.duration,
                     )
-            else:
+            elif not media_info.duration:
                 logger.warning(
                     "Duration unknown — seek bar will be limited to "
                     "transcoded portion: %s",
@@ -486,10 +550,12 @@ class TranscodeManager:
 
             # ---- Build status message ----
             parts = ["Transcoding video"]
+            if start_time > 0:
+                parts[0] += f" from {start_time:.1f}s"
             if audio_tracks:
                 parts.append(f"{len(audio_tracks)} audio track"
                              + ("s" if len(audio_tracks) > 1 else ""))
-            if subtitle_tracks:
+            if subtitle_tracks and start_time == 0:  # Only extract subs on first run
                 parts.append(f"{len(subtitle_tracks)} subtitle track"
                              + ("s" if len(subtitle_tracks) > 1 else ""))
             job.set_state(JobState.TRANSCODING, " + ".join(parts) + "\u2026")
@@ -499,6 +565,8 @@ class TranscodeManager:
                 source=job.source_path,
                 output_dir=job.output_dir,
                 media_info=media_info,
+                start_time=start_time,
+                start_segment=start_segment,
             )
             video_log = os.path.join(config.LOG_DIR, f"{job.video_id}_video.log")
             video_proc = ffmpeg_module.launch(video_cmd, video_log)
@@ -511,6 +579,8 @@ class TranscodeManager:
                     source=job.source_path,
                     output_dir=job.output_dir,
                     track_index=i,
+                    start_time=start_time,
+                    start_segment=start_segment,
                 )
                 log = os.path.join(config.LOG_DIR, f"{job.video_id}_audio_{i}.log")
                 proc = ffmpeg_module.launch(cmd, log)
@@ -521,29 +591,32 @@ class TranscodeManager:
                 )
 
             # ---- Launch subtitle FFmpeg processes (parallel, non-blocking) ----
-            # These finish in seconds; we don't wait for them before READY.
+            # Only extract subtitles on the initial run (start_time == 0)
             sub_procs = []
-            for track in subtitle_tracks:
-                cmd = ffmpeg_module.build_subtitle_command(
-                    source=job.source_path,
-                    output_dir=job.output_dir,
-                    track_index=track["source_index"],
-                )
-                log = os.path.join(
-                    config.LOG_DIR,
-                    f"{job.video_id}_sub_{track['index']}.log"
-                )
-                proc = ffmpeg_module.launch(cmd, log)
-                sub_procs.append(proc)
-                logger.info(
-                    "Subtitle FFmpeg PID %d (track %d: %s [%s]): %s",
-                    proc.pid, track["index"], track["name"],
-                    track["codec"], job.video_id,
-                )
+            if start_time == 0:
+                for track in subtitle_tracks:
+                    cmd = ffmpeg_module.build_subtitle_command(
+                        source=job.source_path,
+                        output_dir=job.output_dir,
+                        track_index=track["source_index"],
+                    )
+                    log = os.path.join(
+                        config.LOG_DIR,
+                        f"{job.video_id}_sub_{track['index']}.log"
+                    )
+                    proc = ffmpeg_module.launch(cmd, log)
+                    sub_procs.append(proc)
+                    logger.info(
+                        "Subtitle FFmpeg PID %d (track %d: %s [%s]): %s",
+                        proc.pid, track["index"], track["name"],
+                        track["codec"], job.video_id,
+                    )
 
             job.processes = [video_proc] + audio_procs + sub_procs
+            job.current_segment = start_segment
 
             # ---- Wait for first video segment ----
+            target_seg = os.path.join(job.output_dir, "video", f"seg_{start_segment:03d}.ts")
             waited = 0.0
             while waited < config.HLS_READY_TIMEOUT:
                 ret = video_proc.poll()
@@ -552,14 +625,14 @@ class TranscodeManager:
                         f"Video FFmpeg exited with code {ret}.\n"
                         f"{_log_tail(video_log)}"
                     )
-                if os.path.exists(job.video_first_seg):
+                if os.path.exists(target_seg):
                     break
-                if ret == 0 and os.path.exists(job.video_first_seg):
+                if ret == 0 and os.path.exists(target_seg):
                     break
                 time.sleep(config.HLS_POLL_INTERVAL)
                 waited += config.HLS_POLL_INTERVAL
             else:
-                self._kill_all(job.processes)
+                job.kill_all_processes()
                 raise RuntimeError(
                     f"Timeout waiting for first video segment "
                     f"({config.HLS_READY_TIMEOUT}s). Log: {video_log}"
@@ -567,12 +640,13 @@ class TranscodeManager:
 
             # ---- Wait for first audio segment (if audio exists) ----
             if audio_procs:
+                target_audio_seg = os.path.join(job.output_dir, "audio_0", f"seg_{start_segment:03d}.ts")
                 waited = 0.0
                 audio_log_0 = os.path.join(
                     config.LOG_DIR, f"{job.video_id}_audio_0.log"
                 )
                 while waited < config.HLS_READY_TIMEOUT:
-                    if os.path.exists(job.audio_first_seg):
+                    if os.path.exists(target_audio_seg):
                         break
                     ret = audio_procs[0].poll()
                     if ret is not None and ret != 0:
@@ -583,19 +657,33 @@ class TranscodeManager:
                     time.sleep(config.HLS_POLL_INTERVAL)
                     waited += config.HLS_POLL_INTERVAL
                 else:
-                    self._kill_all(job.processes)
+                    job.kill_all_processes()
                     raise RuntimeError("Timeout waiting for first audio segment.")
 
-            # ---- Write master playlist ----
-            _write_master(job.master, audio_tracks)
+            # ---- Write master playlist (only on first run) ----
+            if start_time == 0:
+                _write_master(job.master, audio_tracks)
 
             # ---- Browser can start playing ----
             job.set_state(JobState.READY, "Ready")
             logger.info("HLS ready: %s", job.video_id)
+            
+            # ---- Start monitoring segment creation in background ----
+            monitor_thread = threading.Thread(
+                target=self._monitor_segments,
+                args=(job, video_proc, start_segment),
+                daemon=True,
+                name=f"monitor-{job.video_id}",
+            )
+            monitor_thread.start()
 
-            # ---- Wait for all processes (remaining segments + subtitle extraction) ----
+            # ---- Wait for video and audio processes ----
             video_proc.wait()
-            for proc in audio_procs + sub_procs:
+            for proc in audio_procs:
+                proc.wait()
+            
+            # Wait for subtitle processes only if they were started
+            for proc in sub_procs:
                 proc.wait()
 
             # Log any subtitle failures (non-fatal at this point)
@@ -617,13 +705,114 @@ class TranscodeManager:
             with self._registry_lock:
                 self._registry.pop(job.video_id, None)
 
-    @staticmethod
-    def _kill_all(processes: list) -> None:
-        for proc in processes:
-            try:
-                proc.kill()
-            except OSError:
-                pass
+    def _monitor_segments(
+        self,
+        job: TranscodeJob,
+        video_proc,
+        start_segment: int,
+    ) -> None:
+        """
+        Monitor video segment creation and update job.current_segment.
+        This runs in a background thread and helps decide whether to
+        wait for a segment or restart FFmpeg when the user seeks.
+        """
+        video_dir = os.path.join(job.output_dir, "video")
+        current = start_segment
+        
+        while video_proc.poll() is None:
+            seg_path = os.path.join(video_dir, f"seg_{current:03d}.ts")
+            if os.path.exists(seg_path):
+                job.update_position(current)
+                current += 1
+            time.sleep(0.5)
+        
+        # Final update after process ends
+        job.update_position(current)
+    
+    def _restart_at_position(self, job: TranscodeJob, start_time: float) -> None:
+        """
+        Kill current transcode and restart at a new position.
+        Called when user seeks far ahead of current transcode position.
+        """
+        logger.info("Killing current transcode and restarting at %.1fs: %s",
+                    start_time, job.video_id)
+        
+        # Kill all running processes
+        job.kill_all_processes()
+        
+        # Restart transcoding at new position
+        start_segment = int(start_time / config.HLS_SEGMENT_TIME)
+        
+        t = threading.Thread(
+            target=self._run,
+            args=(job, start_time),
+            daemon=True,
+            name=f"transcode-{job.video_id}-seek",
+        )
+        t.start()
+    
+    def _cleanup_cache_if_needed(self) -> None:
+        """
+        Check cache size and delete least recently accessed folders
+        until under MAX_CACHE_SIZE limit.
+        """
+        if config.MAX_CACHE_SIZE <= 0:
+            return
+        
+        try:
+            # Calculate total cache size
+            total_size = 0
+            folder_sizes = []
+            
+            for video_id in os.listdir(config.HLS_CACHE_DIR):
+                folder_path = os.path.join(config.HLS_CACHE_DIR, video_id)
+                if not os.path.isdir(folder_path):
+                    continue
+                
+                # Calculate folder size and last access time
+                folder_size = 0
+                last_access = 0
+                
+                for root, dirs, files in os.walk(folder_path):
+                    for f in files:
+                        fp = os.path.join(root, f)
+                        try:
+                            stat = os.stat(fp)
+                            folder_size += stat.st_size
+                            last_access = max(last_access, stat.st_atime)
+                        except OSError:
+                            pass
+                
+                total_size += folder_size
+                folder_sizes.append((folder_path, folder_size, last_access))
+            
+            # Check if cleanup needed
+            if total_size <= config.MAX_CACHE_SIZE:
+                logger.debug("Cache size %.1f MB (under limit)", total_size / (1024*1024))
+                return
+            
+            # Sort by last access time (oldest first)
+            folder_sizes.sort(key=lambda x: x[2])
+            
+            # Delete folders until under limit
+            for folder_path, folder_size, _ in folder_sizes:
+                if total_size <= config.MAX_CACHE_SIZE:
+                    break
+                
+                try:
+                    shutil.rmtree(folder_path)
+                    total_size -= folder_size
+                    logger.info("Deleted cached folder (LRU): %s (freed %.1f MB)",
+                               os.path.basename(folder_path),
+                               folder_size / (1024*1024))
+                except OSError as exc:
+                    logger.warning("Could not delete %s: %s", folder_path, exc)
+            
+            logger.info("Cache cleanup complete. New size: %.1f MB",
+                       total_size / (1024*1024))
+        
+        except Exception as exc:
+            logger.error("Cache cleanup failed: %s", exc)
 
 
 # ============================================================

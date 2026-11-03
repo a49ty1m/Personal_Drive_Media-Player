@@ -18,11 +18,14 @@ A lightweight, feature-rich media server and personal cloud storage solution tha
 
 ### 📁 File Management
 - **Upload Files** - Drag & drop multiple files, support for all file types (500MB limit)
-- **Download Files** - Direct download from 3-dot menu or preview modal
-- **Delete Files & Folders** - Recursive deletion with confirmation dialogs
+- **Download Files** - Direct download from card footer or 3-dot menu
+- **Download Folders as ZIP** - Download entire folders as compressed archives (GitHub-style)
+- **Delete Files & Folders** - Custom confirmation modal with visual feedback
 - **Rename Files & Folders** - Clean rename interface with validation
 - **Create Folders** - Easy folder creation anywhere in the hierarchy
+- **Star Files & Folders** - Mark favorites for quick access
 - **Smart Navigation** - Browse nested folder structures with breadcrumbs
+- **Recent Files** - Automatically tracks and displays recently viewed videos
 
 ### 👁️ File Preview System
 - **Images** - JPG, PNG, GIF, WebP, SVG, BMP, ICO
@@ -32,12 +35,19 @@ A lightweight, feature-rich media server and personal cloud storage solution tha
 - **Videos** - Automatic redirect to video player with transcoding
 
 ### 🎨 Modern Interface
-- **Dark Theme** - Comfortable viewing experience
+- **Gallery View** - Beautiful card-based layout with hover effects
+- **Smart Filters** - Quick filter by All, Folders, Videos, Images, Documents
+- **Quick Actions** - Star, download, and manage files from card footer
+- **Dark Red Theme** - Comfortable viewing with elegant red accents
 - **3-Dot Menus** - Clean context menus with smart positioning (⋮)
+- **Custom Modals** - Beautiful modals for rename, delete, folder creation
+- **Progress Notifications** - Bottom-right notifications for ZIP downloads and actions
 - **Responsive Design** - Works on desktop, tablet, and mobile
 - **File Type Icons** - Visual identification (🎬 videos, 📄 documents, 🖼️ images, 🎵 audio)
 - **File Size Display** - Human-readable formats (KB, MB, GB)
-- **Hover Effects** - Intuitive visual feedback
+- **Smooth Animations** - Intuitive visual feedback and transitions
+- **Sticky Navigation** - Top nav and filter toolbar stay accessible while scrolling
+- **Active Page Highlighting** - Current section highlighted in navigation
 
 ### 🔒 Security
 - **Path Traversal Protection** - Prevents directory escape attacks
@@ -135,9 +145,41 @@ Open the URL in your browser and start using your media server!
 
 ### Browse & Navigate
 1. Open `http://<your-phone-ip>:8080/browse/` in any browser
-2. Click folders to navigate deeper
-3. Click the "← Back" link to go up one level
-4. Click file names to preview or play
+2. Browse files in the beautiful gallery view with large preview cards
+3. Use **filter buttons** to quickly show only Folders, Videos, Images, or Documents
+4. Click folders to navigate deeper
+5. Click the "← Back" button to go up one level
+6. Click any file card to preview or play
+
+### Navigation Tabs
+- **🏠 Home** - Browse all your files and folders
+- **⭐ Starred** - Quick access to your favorite files and folders
+- **🕒 Recent** - View recently watched videos (auto-tracked)
+
+### Star Files & Folders
+1. Click the **☆** icon on any file or folder card
+2. Icon turns to **⭐** when starred
+3. Access all starred items from the **⭐ Starred** tab
+4. Click again to unstar
+
+### Filter Files
+1. Use the toolbar buttons to filter your view:
+   - **All** - Show everything
+   - **Folders** - Show only folders
+   - **Videos** - Filter by video files (.mp4, .mkv, .avi, etc.)
+   - **Images** - Filter by images (.jpg, .png, .gif, etc.)
+   - **Documents** - Filter by documents, text files, scripts (.pdf, .txt, .sh, .py, .md, etc.)
+
+### Download Files
+- **Quick Download**: Click the **💾** icon in the card footer
+- **Menu Download**: Click 3-dot menu (⋮) → **Download**
+- **Preview Download**: Preview the file → Click **💾 Download** button in the modal
+
+### Download Folders as ZIP
+- **Quick ZIP**: Click the **📦** icon on folder cards
+- **Progress**: Watch the bottom-right notification while ZIP is being created
+- Downloads entire folder structure as a compressed `.zip` file
+- Perfect for backing up or sharing entire directories
 
 ### Upload Files
 1. Click **"📤 Upload Files"** button
@@ -159,26 +201,37 @@ Open the URL in your browser and start using your media server!
 5. **Audio** - Built-in player with playback controls
 6. **Videos** - Redirects to video player with transcoding
 
-### Download Files
-- **Method 1**: Click 3-dot menu (⋮) → **Download**
-- **Method 2**: Preview the file → Click **Download** button
-
 ### Rename Files/Folders
 1. Click 3-dot menu (⋮) → **✏️ Rename**
-2. Enter new name (filename without extension is auto-selected)
+2. Enter new name in the modal dialog
 3. Press **Enter** or click **"Rename"**
+4. Filename without extension is auto-selected for convenience
 
 ### Delete Files/Folders
 1. Click 3-dot menu (⋮) → **🗑️ Delete**
-2. Confirm deletion in the dialog
-3. Folders are deleted recursively
+2. Confirm deletion in the custom modal dialog
+3. Warning message shows that action cannot be undone
+4. Success notification appears in bottom-right corner
+5. Page refreshes automatically to show updated list
+6. Folders are deleted recursively (all contents removed)
 
 ### Play Videos
-1. Click on any video file name
-2. Wait for "Preparing stream..." message
-3. Playback begins automatically once first segments are ready
-4. Use player controls for play/pause, seek, volume
-5. Select audio tracks or subtitles if available
+1. Click on any video file card
+2. Video is automatically added to **🕒 Recent** list
+3. Wait for "Preparing stream..." message
+4. Playback begins automatically once first segments are ready
+5. Player automatically saves your position every 5 seconds
+6. Resume from where you left off when reopening the video
+7. Use player controls for play/pause, seek, volume
+8. Select audio tracks or subtitles if available
+9. Seek anywhere instantly - server transcodes on-demand
+
+### Resume Playback
+- Videos automatically save your watch position
+- Positions saved in browser localStorage (persists 7 days)
+- Resume notification shows: "Resuming from 15:30..."
+- Position cleared when video ends (last 30 seconds)
+- Works with HLS.js seek-based transcoding
 
 ---
 
@@ -204,6 +257,8 @@ All settings in `config.py` can be overridden with environment variables:
 | `VIDEO_CRF` | `23` | H.264 quality (18-28, lower=better) |
 | `CACHE_DIR` | `/tmp/media-server/cache` | HLS output directory |
 | `HLS_READY_TIMEOUT` | `120` | Timeout for first segment (seconds) |
+| `SEGMENT_WAIT_TIMEOUT` | `30` | Wait for segment before restart (seconds) |
+| `MAX_CACHE_SIZE` | `2147483648` (2 GB) | Max cache size before auto-cleanup |
 
 ### Upload Settings
 
@@ -285,39 +340,70 @@ media-server/
 
 ---
 
-## 🎯 How Video Playback Works
+## 🎯 How Video Playback Works (Seek-Based Transcoding)
 
 ```
 1. User clicks video → /player/<path>
                           ↓
-2. manager.submit() (non-blocking, returns immediately)
+2. Add video to Recent list
                           ↓
-3. Player HTML sent to browser (shows "Preparing stream...")
+3. manager.submit() (non-blocking, returns immediately)
                           ↓
-4. Background thread starts:
-   • Acquire semaphore (MAX_TRANSCODES limit)
-   • Run ffprobe → detect codecs
-   • Launch FFmpeg → transcode to H.264/AAC HLS
+4. Player HTML sent to browser (checks for saved position)
+                          ↓
+5. Background thread starts:
+   • Get video duration from ffprobe
+   • Generate FULL VOD playlist (all segments listed)
+   • Launch FFmpeg from resume position (if any)
+   • Use -ss for instant seek (before input)
+   • Force exact keyframes every 6 seconds
    • Output to /tmp/media-server/cache/hls/<video-id>/
-   • Poll for first segment (seg_000.ts)
+   • Poll for first segment
    • Set job state = READY
                           ↓
-5. Browser polls /api/status/<video-id> every 1.5s
+6. Browser polls /api/status/<video-id> every 1.5s
                           ↓
-6. When READY → load stream.m3u8 via HLS.js
+7. When READY → load stream.m3u8 via HLS.js
+   • Full timeline visible immediately
+   • Resume from saved position if exists
+   • Save position every 5 seconds while playing
                           ↓
-7. Playback starts
+8. Playback starts (user can seek anywhere)
                           ↓
-8. FFmpeg continues generating segments in background
+9. User seeks ahead:
+   • Browser requests segment N
+   • Route checks: is FFmpeg near segment N?
+   • YES (within 10 segments): Wait for it
+   • NO (far away): Kill FFmpeg, restart at segment N
                           ↓
-9. FFmpeg finishes → writes #EXT-X-ENDLIST → full VOD available
+10. FFmpeg continues generating segments in background
+                          ↓
+11. FFmpeg finishes → writes #EXT-X-ENDLIST → full VOD available
 ```
 
+**Smart Seek Strategy:**
+- **First play**: Full transcode from position 0 OR resume position
+- **Close seeks** (<60s away): Wait for FFmpeg (max 30s timeout)
+- **Far seeks** (>60s away): Restart FFmpeg at new position
+- **Cached segments**: Instant playback (no transcoding)
+- **Position saved**: Auto-resume on next view
+
 **Cache Strategy:**
-- First play: full transcode
+- First play: transcode from start OR resume position
 - Subsequent plays: instant playback from cache
+- Seek ahead: transcode only the parts you watch
 - File modified (mtime changed): auto-retranscode
 - Cache location: `/tmp/media-server/cache/hls/<video-id>/`
+- **LRU Cache Management**: Auto-cleanup when cache exceeds 2GB
+- Least recently accessed videos deleted first
+- Huge storage savings (only transcodes what you watch)
+
+**Resume Playback:**
+- Position saved every 5 seconds in localStorage
+- Persists for 7 days
+- Auto-cleared when video ends (last 30 seconds)
+- Shows "Resuming from 15:30..." notification
+- HLS.js `startPosition` parameter for exact resume
 
 ---
 
@@ -566,10 +652,18 @@ See [TESTING_GUIDE.md](TESTING_GUIDE.md) for comprehensive testing procedures co
 | 7 | Smart menu positioning | ✅ Complete |
 | 8 | Rename functionality | ✅ Complete |
 | 9 | Password protection | ✅ Complete |
-| 10 | Direct-play (H.264/AAC) | 🔄 Planned |
-| 11 | Auto cache cleanup | 🔄 Planned |
-| 12 | Metadata/posters | 🔄 Planned |
-| 13 | Search functionality | 🔄 Planned |
+| 10 | Gallery view with filters | ✅ Complete |
+| 11 | Starred files & folders | ✅ Complete |
+| 12 | Recent files tracking | ✅ Complete |
+| 13 | Folder ZIP download | ✅ Complete |
+| 14 | Custom delete modal | ✅ Complete |
+| 15 | ZIP progress notifications | ✅ Complete |
+| 16 | Seek-based transcoding | ✅ Complete |
+| 17 | Resume playback | ✅ Complete |
+| 18 | LRU cache management (2GB cap) | ✅ Complete |
+| 19 | Direct-play (H.264/AAC) | 🔄 Planned |
+| 20 | Metadata/posters | 🔄 Planned |
+| 21 | Search functionality | 🔄 Planned |
 
 ---
 

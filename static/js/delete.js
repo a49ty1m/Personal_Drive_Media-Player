@@ -14,25 +14,29 @@ function initDelete() {
         .then(data => {
             if (data.enabled) {
                 deletePasswordRequired = data.password_required;
-                // Delete buttons are now in the 3-dot menu
-                // No need to add separate delete buttons
             }
         })
         .catch(err => console.error('Failed to check delete status:', err));
 }
 
 /**
- * Confirm deletion
+ * Delete file (called from browse.html after confirmation)
  */
-function confirmDelete(path, name, type) {
-    const message = type === 'folder' 
-        ? `Delete folder "${name}" and all its contents?\n\nThis action cannot be undone!`
-        : `Delete file "${name}"?\n\nThis action cannot be undone!`;
-    
-    if (!confirm(message)) {
-        return;
-    }
-    
+function deleteFile(path, name) {
+    performDeletion(path, name, 'file');
+}
+
+/**
+ * Delete folder (called from browse.html after confirmation)
+ */
+function deleteFolder(path, name) {
+    performDeletion(path, name, 'folder');
+}
+
+/**
+ * Perform the actual deletion
+ */
+async function performDeletion(path, name, type) {
     // If password required, prompt for it
     let password = null;
     if (deletePasswordRequired) {
@@ -42,13 +46,6 @@ function confirmDelete(path, name, type) {
         }
     }
     
-    deleteItem(path, password);
-}
-
-/**
- * Delete item via API
- */
-async function deleteItem(path, password) {
     try {
         const response = await fetch('/api/delete', {
             method: 'POST',
@@ -64,14 +61,47 @@ async function deleteItem(path, password) {
         const result = await response.json();
         
         if (result.success) {
-            alert(result.message);
-            location.reload();
+            // Show success notification briefly
+            showNotification('✓ ' + result.message, 'success');
+            // Reload after a short delay
+            setTimeout(() => location.reload(), 500);
         } else {
-            alert('Delete failed: ' + result.message);
+            showNotification('✗ Delete failed: ' + result.message, 'error');
         }
     } catch (error) {
-        alert('Delete error: ' + error.message);
+        showNotification('✗ Delete error: ' + error.message, 'error');
     }
+}
+
+/**
+ * Show notification (reuse ZIP notification element)
+ */
+function showNotification(message, type) {
+    const notification = document.getElementById('zipNotification');
+    const titleEl = notification.querySelector('.zip-notification-title');
+    const subtitleEl = notification.querySelector('.zip-notification-subtitle');
+    const spinner = notification.querySelector('.zip-spinner');
+    
+    // Hide spinner for success/error
+    spinner.style.display = 'none';
+    
+    titleEl.textContent = message;
+    subtitleEl.textContent = '';
+    
+    if (type === 'success') {
+        titleEl.style.color = '#10b981';
+    } else if (type === 'error') {
+        titleEl.style.color = '#ef4444';
+    }
+    
+    notification.classList.add('show');
+    
+    setTimeout(() => {
+        notification.classList.remove('show');
+        // Reset styles
+        spinner.style.display = 'block';
+        titleEl.style.color = '#e0e0e0';
+    }, 2000);
 }
 
 // Initialize on page load

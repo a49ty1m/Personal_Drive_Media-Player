@@ -4,19 +4,28 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% block title %}☁️ My Drive + 🎬 Media Player{% endblock %}</title>
-  <link rel="stylesheet" href="/static/css/style.css">
-  <link rel="stylesheet" href="/static/css/drive.css">
+  <link rel="stylesheet" href="/static/css/style.css?v=6">
+  <link rel="stylesheet" href="/static/css/drive.css?v=6">
   {% block head %}{% endblock %}
 </head>
 <body>
 
-  <header class="site-header">
-    <div class="header-inner">
-      <a class="logo" href="/browse/">☁️ My Drive + 🎬 Media Player</a>
+  <nav class="top-nav">
+    <div class="nav-brand">
+      <div class="nav-brand-icon">🎬</div>
+      <span>My Drive Media</span>
     </div>
-  </header>
+    <div class="nav-menu">
+      <a href="/browse/" class="nav-link {% if request.path.startswith('/browse') %}active{% endif %}">🏠 Home</a>
+      <a href="/starred/" class="nav-link {% if request.path.startswith('/starred') %}active{% endif %}">⭐ Starred</a>
+      <a href="/recent/" class="nav-link {% if request.path.startswith('/recent') %}active{% endif %}">🕒 Recent</a>
+    </div>
+    <div class="nav-actions">
+      <input type="text" class="search-input" placeholder="Search files..." id="searchInput">
+    </div>
+  </nav>
 
-  <main class="main-content">
+  <main class="wrapper">
     {% block content %}{% endblock %}
   </main>
 

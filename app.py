@@ -190,6 +190,7 @@ def create_app():
     from routes.delete   import delete_bp
     from routes.folder   import folder_bp
     from routes.rename   import rename_bp
+    from routes.favorites import favorites_bp
 
     _base = os.path.dirname(os.path.abspath(__file__))
 
@@ -209,6 +210,7 @@ def create_app():
     app.register_blueprint(delete_bp)
     app.register_blueprint(folder_bp)
     app.register_blueprint(rename_bp)
+    app.register_blueprint(favorites_bp)
 
     # ---- Catch-all: redirect unknown URLs to the browser ----
     @app.errorhandler(404)

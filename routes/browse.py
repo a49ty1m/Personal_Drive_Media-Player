@@ -1,10 +1,12 @@
 """
 routes/browse.py
 
-Directory listing routes.
+Directory listing and folder download routes.
 """
 
 import os
+import io
+import zipfile
 import urllib.parse
 
 from flask import Blueprint, render_template, abort, redirect, url_for, send_file, request
@@ -107,3 +109,43 @@ def download_file(path: str):
     else:
         # Send as attachment (force download)
         return send_file(file_path, as_attachment=True)
+
+
+@browse_bp.route("/download-folder/<path:path>")
+def download_folder(path: str):
+    """Download a folder as a ZIP file."""
+    folder_path = safe_join(config.MEDIA_ROOT, path)
+    
+    if not os.path.isdir(folder_path):
+        abort(404)
+    
+    # Create ZIP file in memory
+    memory_file = io.BytesIO()
+    
+    with zipfile.ZipFile(memory_file, 'w', zipfile.ZIP_DEFLATED) as zf:
+        # Walk through directory and add all files
+        for root, dirs, files in os.walk(folder_path):
+            for file in files:
+                file_path = os.path.join(root, file)
+                # Calculate relative path from the folder being zipped
+                arcname = os.path.relpath(file_path, folder_path)
+                try:
+                    zf.write(file_path, arcname)
+                except (OSError, ValueError) as e:
+                    # Skip files that can't be read
+                    print(f"Skipping {file_path}: {e}")
+                    continue
+    
+    # Seek to beginning of BytesIO buffer
+    memory_file.seek(0)
+    
+    # Get folder name for the ZIP filename
+    folder_name = os.path.basename(folder_path) if path else "media"
+    zip_filename = f"{folder_name}.zip"
+    
+    return send_file(
+        memory_file,
+        mimetype='application/zip',
+        as_attachment=True,
+        download_name=zip_filename
+    )

@@ -9,14 +9,18 @@ function clickFile(fileId) {
     const fileItem = document.getElementById(fileId);
     const path = fileItem.dataset.path;
     const extension = fileItem.dataset.extension;
-    const isVideo = fileItem.dataset.isVideo === 'True';
+    const isVideo = fileItem.dataset.isVideo === 'True' || fileItem.dataset.isVideo === 'true';
     const url = fileItem.dataset.url;
+    
+    console.log('Clicked file:', {path, extension, isVideo, url});
     
     if (isVideo) {
         // Play video in player
+        console.log('Opening video player');
         window.location.href = url;
     } else {
         // Preview other file types
+        console.log('Opening preview for:', extension);
         previewFile(path, extension);
     }
 }
@@ -43,58 +47,69 @@ function toggleMenu(event, fileId) {
     // Close all menus first
     document.querySelectorAll('.dropdown-menu').forEach(m => {
         m.classList.remove('show');
-        m.classList.remove('open-up');
         m.style.left = '';
         m.style.top = '';
+        // Move menu back to original parent
+        const originalParent = m.getAttribute('data-original-parent');
+        if (originalParent) {
+            const parent = document.getElementById(originalParent);
+            if (parent && m.parentElement !== parent) {
+                parent.appendChild(m);
+            }
+        }
     });
     
     // If the menu was closed, open it
     if (!isCurrentlyOpen) {
+        // Store original parent
+        if (!menu.getAttribute('data-original-parent')) {
+            menu.setAttribute('data-original-parent', menu.parentElement.id);
+        }
+        
+        // Move menu to body so it's not clipped by card overflow
+        document.body.appendChild(menu);
+        
         // Position the menu BEFORE showing it
         positionMenu(menu, button);
         
         // Show menu after positioning
         menu.classList.add('show');
     }
-    // If it was open, it's now closed (we removed 'show' above)
 }
 
 /**
  * Smart positioning: position fixed menu relative to button
  */
 function positionMenu(menu, button) {
-    // If menu already has position set and is visible, don't recalculate
-    if (menu.style.left && menu.style.top && menu.classList.contains('show')) {
-        return;
-    }
-    
     const buttonRect = button.getBoundingClientRect();
     const viewportHeight = window.innerHeight;
     const viewportWidth = window.innerWidth;
-    const menuWidth = 180;
-    const menuHeight = 150; // Approximate menu height
+    const menuWidth = 200;
+    const menuHeight = 160; // Approximate menu height
     
-    // Position menu to align with the right edge of the button, opening downward
+    // Position menu below the button, aligned to right
     let left = buttonRect.right - menuWidth;
-    let top = buttonRect.bottom + 5;
+    let top = buttonRect.bottom + 8;
     
     // Check if menu would go off bottom
     if (top + menuHeight > viewportHeight - 20) {
         // Open upward instead
-        top = buttonRect.top - menuHeight - 5;
-        menu.classList.add('open-up');
-    } else {
-        menu.classList.remove('open-up');
+        top = buttonRect.top - menuHeight - 8;
     }
     
-    // Ensure menu doesn't go off the right edge
+    // Ensure menu doesn't go off the left edge
     if (left < 10) {
         left = 10;
     }
     
-    // Ensure menu doesn't go off the left edge
+    // Ensure menu doesn't go off the right edge
     if (left + menuWidth > viewportWidth - 10) {
         left = viewportWidth - menuWidth - 10;
+    }
+    
+    // Ensure menu doesn't go off the top
+    if (top < 10) {
+        top = 10;
     }
     
     // Apply position
@@ -108,10 +123,17 @@ function positionMenu(menu, button) {
 function closeMenu() {
     document.querySelectorAll('.dropdown-menu').forEach(menu => {
         menu.classList.remove('show');
-        menu.classList.remove('open-up');
-        // Clear inline positioning so next open recalculates
         menu.style.left = '';
         menu.style.top = '';
+        
+        // Move menu back to original parent
+        const originalParentId = menu.getAttribute('data-original-parent');
+        if (originalParentId) {
+            const parent = document.getElementById(originalParentId);
+            if (parent && menu.parentElement !== parent) {
+                parent.appendChild(menu);
+            }
+        }
     });
 }
 
@@ -152,8 +174,10 @@ function downloadFile(path, filename) {
  * Preview file based on type
  */
 function previewFile(path, extension) {
+    console.log('previewFile called - path:', path, 'extension:', extension);
     closeMenu();
     const ext = extension.toLowerCase();
+    console.log('Extension lowercased:', ext);
     
     // Check if it's a previewable type
     const imageTypes = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg', '.bmp', '.ico'];
@@ -162,15 +186,20 @@ function previewFile(path, extension) {
     const audioTypes = ['.mp3', '.wav', '.ogg', '.m4a', '.flac', '.aac'];
     
     if (imageTypes.includes(ext)) {
+        console.log('Detected as image type, calling previewImage');
         previewImage(path);
     } else if (textTypes.includes(ext)) {
+        console.log('Detected as text type, calling previewText');
         previewText(path);
     } else if (pdfTypes.includes(ext)) {
+        console.log('Detected as PDF type, calling previewPDFWithFallback');
         // Try to preview PDF, with fallback
         previewPDFWithFallback(path);
     } else if (audioTypes.includes(ext)) {
+        console.log('Detected as audio type, calling previewAudio');
         previewAudio(path);
     } else {
+        console.log('Type not recognized, showing not available message');
         // Not previewable, show message and download
         showPreviewNotAvailable(path, ext);
     }
@@ -194,7 +223,7 @@ function showPreviewNotAvailable(path, extension) {
                 ${extension.toUpperCase()} files cannot be previewed in the browser.
             </p>
             <button class="btn-primary" onclick="downloadCurrentPreview(); closePreviewModal();">
-                ⬇️ Download File
+                💾 Download File
             </button>
         </div>
     `;
@@ -225,7 +254,7 @@ function previewPDFWithFallback(path) {
                 Please download it to view.
             </p>
             <button class="btn-primary" onclick="downloadCurrentPreview(); closePreviewModal();">
-                ⬇️ Download PDF
+                💾 Download PDF
             </button>
         </div>
     `;
@@ -259,19 +288,30 @@ function handlePDFError() {
  * Preview image
  */
 function previewImage(path) {
+    console.log('previewImage called with path:', path);
+    
     const filename = path.split('/').pop();
     currentPreviewPath = path;
     currentPreviewFilename = filename;
     
+    console.log('Creating modal for filename:', filename);
     const modal = createPreviewModal(filename, false); // false = no zoom controls for images
+    console.log('Modal created:', modal);
+    
     const downloadUrl = '/download/' + encodeURIComponent(path);
+    console.log('Download URL:', downloadUrl);
     
     modal.querySelector('.preview-content').innerHTML = `
         <img src="${downloadUrl}" alt="${escapeHtml(filename)}">
     `;
     
+    console.log('Appending modal to body');
     document.body.appendChild(modal);
+    
+    console.log('Adding show class to modal');
     modal.classList.add('show');
+    
+    console.log('Modal should now be visible. Modal classes:', modal.className);
 }
 
 /**
@@ -334,15 +374,18 @@ function previewAudio(path) {
  * Create preview modal
  */
 function createPreviewModal(filename, isPDF = false) {
+    console.log('createPreviewModal called for:', filename);
+    
     const modal = document.createElement('div');
     modal.className = 'modal preview-modal';
+    console.log('Modal element created with classes:', modal.className);
     
     modal.innerHTML = `
         <div class="modal-content">
             <div class="modal-header">
                 <h2>📄 ${escapeHtml(filename)}</h2>
                 <div class="modal-header-actions">
-                    <button class="preview-download-btn" onclick="downloadCurrentPreview()">⬇️ Download</button>
+                    <button class="preview-download-btn" onclick="downloadCurrentPreview()">💾 Download</button>
                     <button class="modal-close" onclick="closePreviewModal()">&times;</button>
                 </div>
             </div>
@@ -354,6 +397,7 @@ function createPreviewModal(filename, isPDF = false) {
         </div>
     `;
     
+    console.log('Modal innerHTML set, returning modal');
     return modal;
 }
 

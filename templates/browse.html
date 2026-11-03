@@ -276,29 +276,69 @@
     }
     
     // Download folder as ZIP
-    function downloadFolder(folderPath, folderName) {
+    async function downloadFolder(folderPath, folderName) {
       // Show ZIP notification
       const notification = document.getElementById('zipNotification');
       const fileNameEl = document.getElementById('zipFileName');
+      const titleEl = notification.querySelector('.zip-notification-title');
+      
       fileNameEl.textContent = folderName + '.zip';
+      titleEl.textContent = 'Creating ZIP archive...';
       notification.classList.add('show');
       
       const downloadUrl = '/download-folder/' + encodeURIComponent(folderPath);
       
-      // Create temporary link and trigger download
-      const a = document.createElement('a');
-      a.href = downloadUrl;
-      a.download = folderName + '.zip';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      
-      console.log('Downloading folder as ZIP:', folderName);
-      
-      // Hide notification after 3 seconds
-      setTimeout(() => {
-        notification.classList.remove('show');
-      }, 3000);
+      try {
+        // Fetch the ZIP file
+        const response = await fetch(downloadUrl);
+        
+        if (!response.ok) {
+          // Check if it's a 413 (Payload Too Large) error
+          if (response.status === 413) {
+            const data = await response.json();
+            throw new Error(`Folder too large (${data.size_mb} MB). Maximum: ${data.limit_mb} MB`);
+          }
+          throw new Error('Failed to create ZIP');
+        }
+        
+        // Update notification to show download is ready
+        titleEl.textContent = 'Downloading...';
+        
+        // Get the blob
+        const blob = await response.blob();
+        
+        // Create download link
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = folderName + '.zip';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+        
+        // Show success
+        titleEl.textContent = '✓ Download started';
+        titleEl.style.color = '#10b981';
+        
+        // Hide notification after 2 seconds
+        setTimeout(() => {
+          notification.classList.remove('show');
+          titleEl.textContent = 'Creating ZIP archive...';
+          titleEl.style.color = '';
+        }, 2000);
+        
+      } catch (error) {
+        titleEl.textContent = '✗ ' + error.message;
+        titleEl.style.color = '#ef4444';
+        
+        // Hide error notification after 5 seconds (longer for error messages)
+        setTimeout(() => {
+          notification.classList.remove('show');
+          titleEl.textContent = 'Creating ZIP archive...';
+          titleEl.style.color = '';
+        }, 5000);
+      }
     }
     
     // Delete confirmation modal

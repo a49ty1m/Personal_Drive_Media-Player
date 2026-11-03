@@ -121,6 +121,34 @@ def download_folder(path: str):
     if not os.path.isdir(folder_path):
         abort(404)
     
+    # Calculate folder size before creating ZIP
+    total_size = 0
+    file_count = 0
+    for root, dirs, files in os.walk(folder_path):
+        for file in files:
+            try:
+                file_path = os.path.join(root, file)
+                total_size += os.path.getsize(file_path)
+                file_count += 1
+            except OSError:
+                continue
+    
+    # Check if folder exceeds maximum ZIP size (if limit is set)
+    if config.MAX_ZIP_SIZE > 0 and total_size > config.MAX_ZIP_SIZE:
+        from flask import jsonify
+        size_mb = total_size / (1024 * 1024)
+        limit_mb = config.MAX_ZIP_SIZE / (1024 * 1024)
+        logger.warning("Folder too large for ZIP: %.1f MB (limit: %.1f MB)", size_mb, limit_mb)
+        return jsonify({
+            "error": "Folder too large",
+            "message": f"Folder is {size_mb:.1f} MB, exceeds {limit_mb:.0f} MB limit",
+            "size_mb": round(size_mb, 1),
+            "limit_mb": int(limit_mb)
+        }), 413  # 413 Payload Too Large
+    
+    logger.info("Creating ZIP for folder: %s (%.1f MB, %d files)", 
+                os.path.basename(folder_path), total_size / (1024 * 1024), file_count)
+    
     # Create ZIP file in temp directory (not RAM)
     # delete=False so Flask can stream it, we'll clean up manually
     temp_zip = tempfile.NamedTemporaryFile(mode='w+b', suffix='.zip', delete=False)

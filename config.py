@@ -72,9 +72,9 @@ MAX_UPLOAD_SIZE = int(os.environ.get("MAX_UPLOAD_SIZE", str(500 * 1024 * 1024)))
 DELETE_ENABLED = os.environ.get("DELETE_ENABLED", "true").lower() == "true"
 
 # Maximum folder size for ZIP download (in bytes)
-# Default: 200 MB (suitable for Termux/low-resource servers)
+# Default: 1 GB (above this, ZIP creation is not possible on Termux)
 # Set to 0 to disable size limit
-MAX_ZIP_SIZE = int(os.environ.get("MAX_ZIP_SIZE", str(200 * 1024 * 1024)))
+MAX_ZIP_SIZE = int(os.environ.get("MAX_ZIP_SIZE", str(1024 * 1024 * 1024)))
 
 # Optional: Password protection for uploads (None = disabled)
 # Set via: UPLOAD_PASSWORD=mysecret python app.py

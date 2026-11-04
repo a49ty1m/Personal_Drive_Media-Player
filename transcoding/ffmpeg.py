@@ -66,17 +66,19 @@ def build_video_command(
     # First video stream only
     cmd.extend(["-map", "0:v:0"])
 
-    # Ensure even dimensions (libx264 requirement)
-    cmd.extend(["-vf", "scale=trunc(iw/2)*2:trunc(ih/2)*2"])
+    # Downscale to max 720p for mobile performance (maintains aspect ratio)
+    # If video is already smaller, this does nothing
+    cmd.extend(["-vf", "scale='min(1280,iw)':'min(720,ih)':force_original_aspect_ratio=decrease,scale=trunc(iw/2)*2:trunc(ih/2)*2"])
 
     # Universal H.264
     cmd.extend([
         "-c:v",       config.VIDEO_CODEC,
         "-preset",    config.VIDEO_PRESET,
         "-crf",       str(config.VIDEO_CRF),
-        "-profile:v", "high",
-        "-level",     "4.1",
+        "-profile:v", "main",          # changed from "high" - lighter for mobile
+        "-level",     "4.0",           # changed from 4.1 - better compatibility
         "-pix_fmt",   "yuv420p",
+        "-threads",   "4",             # limit threads for mobile CPU
     ])
     
     # FORCE EXACT KEYFRAMES every HLS_SEGMENT_TIME seconds

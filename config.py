@@ -96,18 +96,18 @@ ALLOWED_UPLOAD_EXTENSIONS = None  # Allow all file types
 MAX_TRANSCODES = int(os.environ.get("MAX_TRANSCODES", "1"))
 
 # HLS segment duration in seconds.
-HLS_SEGMENT_TIME = int(os.environ.get("HLS_SEGMENT_TIME", "6"))
+HLS_SEGMENT_TIME = int(os.environ.get("HLS_SEGMENT_TIME", "8"))  # increased from 6
 
 # Video encoding
 VIDEO_CODEC   = "libx264"
-VIDEO_PRESET  = "ultrafast"   # fastest real-time encoding
-VIDEO_CRF     = 23            # quality (lower = better, 18–28 range)
+VIDEO_PRESET  = "superfast"   # lighter than ultrafast, better for mobile
+VIDEO_CRF     = 28            # lower quality = faster encoding (18–28 range)
 
-# Audio encoding
+# Audio encoding - simplified for mobile
 AUDIO_CODEC       = "aac"
-AUDIO_BITRATE     = "160k"
-AUDIO_SAMPLE_RATE = "48000"
-AUDIO_CHANNELS    = "2"       # stereo
+AUDIO_BITRATE     = "128k"     # reduced from 160k
+AUDIO_SAMPLE_RATE = "44100"    # reduced from 48000
+AUDIO_CHANNELS    = "2"        # stereo
 
 # Timeout (seconds) waiting for the first HLS segment to appear.
 HLS_READY_TIMEOUT = int(os.environ.get("HLS_READY_TIMEOUT", "120"))
@@ -121,11 +121,11 @@ HLS_POLL_INTERVAL = 0.25
 # the current transcode job is killed and restarted at the requested position.
 SEGMENT_WAIT_TIMEOUT = int(os.environ.get("SEGMENT_WAIT_TIMEOUT", "30"))
 
-# Maximum total cache size in bytes (default: 2 GB).
+# Maximum total cache size in bytes (default: 500 MB for mobile).
 # When cache exceeds this limit after a transcode completes, the least
 # recently accessed video folders are deleted until under the cap.
 # Set to 0 to disable automatic cleanup.
-MAX_CACHE_SIZE = int(os.environ.get("MAX_CACHE_SIZE", str(2 * 1024 * 1024 * 1024)))
+MAX_CACHE_SIZE = int(os.environ.get("MAX_CACHE_SIZE", str(500 * 1024 * 1024)))
 
 # ============================================================
 # PATHS

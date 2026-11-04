@@ -283,9 +283,10 @@ def main():
     # ---- Startup checks ----
     ok = startup_checks()
     
-    # ---- Auto-cleanup cache on startup ----
-    logger.info("Clearing transcode cache on startup...")
-    cleanup_cache(full=True)
+    # ---- Quick cleanup on startup (incomplete jobs only) ----
+    # Full cache clear would scan all files, too slow on mobile
+    logger.info("Cleaning up incomplete transcode jobs...")
+    cleanup_cache(full=False)
 
     local_ip = get_local_ip()
     url      = f"http://{local_ip}:{args.port}"

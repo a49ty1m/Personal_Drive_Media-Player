@@ -96,17 +96,17 @@ ALLOWED_UPLOAD_EXTENSIONS = None  # Allow all file types
 MAX_TRANSCODES = int(os.environ.get("MAX_TRANSCODES", "1"))
 
 # HLS segment duration in seconds.
-HLS_SEGMENT_TIME = int(os.environ.get("HLS_SEGMENT_TIME", "10"))  # longer segments = less CPU load
+HLS_SEGMENT_TIME = int(os.environ.get("HLS_SEGMENT_TIME", "4"))  # shorter = smoother seeking
 
-# Video encoding - Optimized for mobile playback
+# Video encoding - Optimized for 1080p mobile playback
 VIDEO_CODEC   = "libx264"
-VIDEO_PRESET  = "veryfast"    # faster encoding, much lighter on CPU
-VIDEO_CRF     = 30            # lower quality but smooth playback (23=high, 30=medium)
+VIDEO_PRESET  = "ultrafast"   # fastest encoding for real-time 1080p
+VIDEO_CRF     = 26            # balanced quality (23=high, 28=low)
 
-# Audio encoding - simplified for mobile
+# Audio encoding - keep reasonable quality
 AUDIO_CODEC       = "aac"
-AUDIO_BITRATE     = "96k"      # reduced from 128k (enough for mobile speakers)
-AUDIO_SAMPLE_RATE = "44100"    # standard quality
+AUDIO_BITRATE     = "128k"     
+AUDIO_SAMPLE_RATE = "44100"    
 AUDIO_CHANNELS    = "2"        # stereo
 
 # Timeout (seconds) waiting for the first HLS segment to appear.

@@ -357,12 +357,31 @@
     if (Hls.isSupported()) {
       var savedPosition = getSavedPosition();
       
+      // Smart buffering configuration for 1080p mobile playback
       hlsInstance = new Hls({
         enableWorker:       true,
-        maxBufferLength:    30,
-        maxMaxBufferLength: 90,
+        
+        // Adaptive buffering algorithm
+        maxBufferLength:    20,    // Keep 20 seconds buffered (reduced from 30)
+        maxMaxBufferLength: 40,    // Max buffer (reduced from 90 to save memory)
+        maxBufferSize:      30 * 1000 * 1000,  // 30MB max buffer size
+        maxBufferHole:      0.5,   // Jump over gaps larger than 0.5s
+        
+        // Network optimization
         lowLatencyMode:     false,
+        backBufferLength:   10,    // Keep only 10s behind playhead
+        
+        // Quality & performance
+        abrEwmaDefaultEstimate: 500000,  // Start with conservative bitrate estimate
         startPosition:      savedPosition,  // Resume from saved position
+        
+        // Fragment loading algorithm
+        manifestLoadingTimeOut: 10000,
+        manifestLoadingMaxRetry: 2,
+        levelLoadingTimeOut: 10000,
+        levelLoadingMaxRetry: 2,
+        fragLoadingTimeOut: 20000,
+        fragLoadingMaxRetry: 3,
       });
 
       hlsInstance.loadSource(url);

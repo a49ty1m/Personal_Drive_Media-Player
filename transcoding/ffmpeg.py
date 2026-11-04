@@ -66,19 +66,21 @@ def build_video_command(
     # First video stream only
     cmd.extend(["-map", "0:v:0"])
 
-    # Downscale to max 720p for mobile performance (maintains aspect ratio)
-    # If video is already smaller, this does nothing
-    cmd.extend(["-vf", "scale='min(1280,iw)':'min(720,ih)':force_original_aspect_ratio=decrease,scale=trunc(iw/2)*2:trunc(ih/2)*2"])
+    # Ensure even dimensions (libx264 requirement) - keeps original resolution
+    cmd.extend(["-vf", "scale=trunc(iw/2)*2:trunc(ih/2)*2"])
 
-    # Universal H.264
+    # Universal H.264 - Optimized for 1080p mobile real-time encoding
     cmd.extend([
         "-c:v",       config.VIDEO_CODEC,
         "-preset",    config.VIDEO_PRESET,
         "-crf",       str(config.VIDEO_CRF),
-        "-profile:v", "main",          # changed from "high" - lighter for mobile
-        "-level",     "4.0",           # changed from 4.1 - better compatibility
+        "-profile:v", "high",
+        "-level",     "4.1",
         "-pix_fmt",   "yuv420p",
-        "-threads",   "4",             # limit threads for mobile CPU
+        "-threads",   "0",             # auto (let FFmpeg decide)
+        "-tune",      "zerolatency",   # optimize for real-time streaming
+        "-g",         str(config.HLS_SEGMENT_TIME * 25),  # GOP size = fps * segment (fewer keyframes)
+        "-x264-params", "nal-hrd=cbr:force-cfr=1:ref=2:bframes=0",  # CBR, 2 ref frames, no B-frames for speed
     ])
     
     # FORCE EXACT KEYFRAMES every HLS_SEGMENT_TIME seconds

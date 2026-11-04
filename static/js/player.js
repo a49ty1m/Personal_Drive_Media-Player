@@ -357,31 +357,35 @@
     if (Hls.isSupported()) {
       var savedPosition = getSavedPosition();
       
-      // Smart buffering configuration for 1080p mobile playback
+      // ANTI-STUTTER buffering for 1080p mobile
       hlsInstance = new Hls({
         enableWorker:       true,
         
-        // Adaptive buffering algorithm
-        maxBufferLength:    20,    // Keep 20 seconds buffered (reduced from 30)
-        maxMaxBufferLength: 40,    // Max buffer (reduced from 90 to save memory)
-        maxBufferSize:      30 * 1000 * 1000,  // 30MB max buffer size
-        maxBufferHole:      0.5,   // Jump over gaps larger than 0.5s
+        // Larger buffers to absorb encoding delays
+        maxBufferLength:    30,    // Keep 30 seconds buffered
+        maxMaxBufferLength: 60,    // Max 60s buffer
+        maxBufferSize:      60 * 1000 * 1000,  // 60MB max (tolerate large segments)
+        maxBufferHole:      0.3,   // Small gaps OK
         
         // Network optimization
         lowLatencyMode:     false,
-        backBufferLength:   10,    // Keep only 10s behind playhead
+        backBufferLength:   5,     // Keep only 5s behind (save memory)
         
         // Quality & performance
-        abrEwmaDefaultEstimate: 500000,  // Start with conservative bitrate estimate
-        startPosition:      savedPosition,  // Resume from saved position
+        abrEwmaDefaultEstimate: 5000000,  // Assume good bandwidth
+        startPosition:      savedPosition,
         
-        // Fragment loading algorithm
-        manifestLoadingTimeOut: 10000,
-        manifestLoadingMaxRetry: 2,
-        levelLoadingTimeOut: 10000,
-        levelLoadingMaxRetry: 2,
-        fragLoadingTimeOut: 20000,
-        fragLoadingMaxRetry: 3,
+        // Aggressive fragment loading (no stutters from network delays)
+        manifestLoadingTimeOut: 15000,
+        manifestLoadingMaxRetry: 4,
+        levelLoadingTimeOut: 15000,
+        levelLoadingMaxRetry: 4,
+        fragLoadingTimeOut: 30000,  // 30s timeout for large segments
+        fragLoadingMaxRetry: 6,
+        
+        // Start loading immediately
+        startFragPrefetch: true,
+        testBandwidth: false,  // Don't waste time measuring
       });
 
       hlsInstance.loadSource(url);

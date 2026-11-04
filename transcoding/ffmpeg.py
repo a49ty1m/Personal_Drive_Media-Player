@@ -69,18 +69,26 @@ def build_video_command(
     # Ensure even dimensions (libx264 requirement) - keeps original resolution
     cmd.extend(["-vf", "scale=trunc(iw/2)*2:trunc(ih/2)*2"])
 
-    # Universal H.264 - Optimized for 1080p mobile real-time encoding
+    # Universal H.264 - ANTI-STUTTER: maximize encoding speed
     cmd.extend([
         "-c:v",       config.VIDEO_CODEC,
         "-preset",    config.VIDEO_PRESET,
         "-crf",       str(config.VIDEO_CRF),
-        "-profile:v", "high",
-        "-level",     "4.1",
+        "-profile:v", "main",          # main profile = faster than high
+        "-level",     "4.0",
         "-pix_fmt",   "yuv420p",
-        "-threads",   "0",             # auto (let FFmpeg decide)
-        "-tune",      "zerolatency",   # optimize for real-time streaming
-        "-g",         str(config.HLS_SEGMENT_TIME * 25),  # GOP size = fps * segment (fewer keyframes)
-        "-x264-params", "nal-hrd=cbr:force-cfr=1:ref=2:bframes=0",  # CBR, 2 ref frames, no B-frames for speed
+        "-threads",   "0",             # auto threads
+        "-tune",      "zerolatency",   # real-time streaming
+        "-g",         "250",           # large GOP (10 seconds @ 25fps) = fewer keyframes
+        "-sc_threshold", "0",          # disable scene change detection (faster)
+        "-x264-params", "rc-lookahead=0:me=dia:subme=0:ref=1:bframes=0:cabac=0:weightp=0",
+        # rc-lookahead=0: no lookahead (instant encoding)
+        # me=dia: diamond motion search (fastest)
+        # subme=0: no subpixel motion estimation
+        # ref=1: 1 reference frame only
+        # bframes=0: no B-frames
+        # cabac=0: use CAVLC instead (faster entropy coding)
+        # weightp=0: disable weighted prediction
     ])
     
     # FORCE EXACT KEYFRAMES every HLS_SEGMENT_TIME seconds

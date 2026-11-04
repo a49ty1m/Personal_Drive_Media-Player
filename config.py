@@ -96,12 +96,12 @@ ALLOWED_UPLOAD_EXTENSIONS = None  # Allow all file types
 MAX_TRANSCODES = int(os.environ.get("MAX_TRANSCODES", "1"))
 
 # HLS segment duration in seconds.
-HLS_SEGMENT_TIME = int(os.environ.get("HLS_SEGMENT_TIME", "4"))  # shorter = smoother seeking
+HLS_SEGMENT_TIME = int(os.environ.get("HLS_SEGMENT_TIME", "6"))  # balanced for smooth playback
 
-# Video encoding - Optimized for 1080p mobile playback
+# Video encoding - AGGRESSIVE optimization for stutter-free 1080p
 VIDEO_CODEC   = "libx264"
-VIDEO_PRESET  = "ultrafast"   # fastest encoding for real-time 1080p
-VIDEO_CRF     = 26            # balanced quality (23=high, 28=low)
+VIDEO_PRESET  = "ultrafast"   # fastest possible
+VIDEO_CRF     = 28            # faster encoding (trade quality for smoothness)
 
 # Audio encoding - keep reasonable quality
 AUDIO_CODEC       = "aac"

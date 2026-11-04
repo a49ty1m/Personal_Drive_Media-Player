@@ -119,7 +119,7 @@ HLS_POLL_INTERVAL = 0.25
 # how long (seconds) to hold the HTTP request open waiting for FFmpeg
 # to create it.  If the segment doesn't appear within this timeout,
 # the current transcode job is killed and restarted at the requested position.
-SEGMENT_WAIT_TIMEOUT = int(os.environ.get("SEGMENT_WAIT_TIMEOUT", "30"))
+SEGMENT_WAIT_TIMEOUT = int(os.environ.get("SEGMENT_WAIT_TIMEOUT", "10"))  # Reduced from 30 for faster seeks
 
 # Maximum total cache size in bytes (default: 500 MB for mobile).
 # When cache exceeds this limit after a transcode completes, the least

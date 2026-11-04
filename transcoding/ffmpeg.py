@@ -103,14 +103,15 @@ def build_video_command(
     # No audio in video stream
     cmd.extend(["-an"])
 
-    # HLS output
+    # HLS output - optimized for fast seeks
     cmd.extend([
         "-f",                    "hls",
         "-hls_time",             str(config.HLS_SEGMENT_TIME),
         "-hls_playlist_type",    "event",
         "-hls_segment_type",     "mpegts",
-        "-hls_flags",            "independent_segments",
+        "-hls_flags",            "independent_segments+temp_file",  # atomic writes
         "-hls_segment_filename", seg_tmpl,
+        "-hls_init_time",        "2",       # First segment only 2s (faster startup)
     ])
     
     # SEGMENT NUMBERING for resume/seek

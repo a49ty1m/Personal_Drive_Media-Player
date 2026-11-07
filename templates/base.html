@@ -16,7 +16,7 @@
       <span>My Drive Media</span>
     </div>
     <div class="nav-menu">
-      <a href="/browse/" class="nav-link {% if request.path.startswith('/browse') %}active{% endif %}">🏠 Home</a>
+      <a href="/browse/" class="nav-link {% if request.path.startswith('/browse') and not request.path.startswith('/player') %}active{% endif %}">🏠 Home</a>
       <a href="/starred/" class="nav-link {% if request.path.startswith('/starred') %}active{% endif %}">⭐ Starred</a>
       <a href="/recent/" class="nav-link {% if request.path.startswith('/recent') %}active{% endif %}">🕒 Recent</a>
     </div>

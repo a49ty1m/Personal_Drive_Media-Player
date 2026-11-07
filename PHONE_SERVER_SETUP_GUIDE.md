@@ -125,7 +125,7 @@ OpenSSH_9.x
 
 ## 5. Setup Storage Access
 
-### Grant Termux Storage Permission:
+### Step 1: Grant Basic Storage Permission
 ```bash
 termux-setup-storage
 ```
@@ -134,27 +134,354 @@ termux-setup-storage
 - Phone will ask for storage permission → **Allow**
 - Creates `~/storage/` symlinks to phone storage
 
-### Verify Storage Access:
+### Step 2: Verify Storage Access
 ```bash
 ls ~/storage/
 ```
 
 **You should see:**
 ```
-dcim/      (Camera)
+dcim/      (Camera photos)
 downloads/ (Downloads folder)
 movies/    (Movies folder)
 music/     (Music folder)
 shared/    (Internal storage root)
 ```
 
-### Create Media Directory:
+### Step 3: Understanding Storage Structure
+
+#### Default Symlinks:
 ```bash
-# Create folder for your videos
-mkdir -p ~/storage/shared/Movies
-cd ~/storage/shared/Movies
+~/storage/dcim/       → /storage/emulated/0/DCIM
+~/storage/downloads/  → /storage/emulated/0/Download
+~/storage/movies/     → /storage/emulated/0/Movies
+~/storage/music/      → /storage/emulated/0/Music
+~/storage/shared/     → /storage/emulated/0/
+```
+
+#### Check actual paths:
+```bash
+ls -la ~/storage/
+```
+
+**Output:**
+```
+lrwxrwxrwx dcim -> /storage/emulated/0/DCIM
+lrwxrwxrwx downloads -> /storage/emulated/0/Download
+lrwxrwxrwx shared -> /storage/emulated/0
+```
+
+### Step 4: Access ALL System Folders
+
+#### Navigate to root internal storage:
+```bash
+cd ~/storage/shared
 ls -lah
 ```
+
+**You'll see ALL folders:**
+```
+Alarms/
+Android/          (App data)
+Audiobooks/
+DCIM/            (Camera)
+Documents/
+Download/
+Movies/
+Music/
+Notifications/
+Pictures/
+Podcasts/
+Ringtones/
+WhatsApp/        (if installed)
+Telegram/        (if installed)
+```
+
+#### Create custom symlinks for easy access:
+```bash
+# Link to Documents folder
+ln -s ~/storage/shared/Documents ~/Documents
+
+# Link to Downloads folder  
+ln -s ~/storage/shared/Download ~/Downloads
+
+# Link to WhatsApp media
+ln -s ~/storage/shared/WhatsApp ~/WhatsApp
+
+# Link to Telegram
+ln -s ~/storage/shared/Telegram ~/Telegram
+
+# Link to Pictures
+ln -s ~/storage/shared/Pictures ~/Pictures
+```
+
+**Now you can access them easily:**
+```bash
+cd ~/Downloads
+cd ~/Documents
+cd ~/WhatsApp/Media/WhatsApp\ Images
+```
+
+### Step 5: Access External SD Card (if available)
+
+#### Check if SD card exists:
+```bash
+ls /storage/
+```
+
+**Output example:**
+```
+emulated/  (Internal storage)
+XXXX-XXXX/ (SD card - random ID like "1234-5678")
+```
+
+#### Find SD card path:
+```bash
+ls /storage/ | grep -v emulated
+```
+
+**Example output:** `1234-5678`
+
+#### Access SD card:
+```bash
+cd /storage/1234-5678
+ls -lah
+```
+
+#### Create symlink for SD card:
+```bash
+# Replace XXXX-XXXX with your actual SD card ID
+ln -s /storage/1234-5678 ~/sdcard
+```
+
+**Now access SD card:**
+```bash
+cd ~/sdcard
+ls -lah
+```
+
+### Step 6: Full System Access (Root Not Required)
+
+#### Access Android app directories:
+```bash
+cd ~/storage/shared/Android
+ls -lah
+```
+
+**You'll see:**
+```
+data/    (App internal data - requires root for some apps)
+media/   (App media files - accessible)
+obb/     (Game data files)
+```
+
+#### Access app media folders:
+```bash
+# Example: Access app-specific media
+cd ~/storage/shared/Android/media/com.whatsapp/WhatsApp
+ls -lah
+```
+
+### Step 7: Create Organized Media Structure
+
+#### Create media server folders:
+```bash
+# Movies organized by quality
+mkdir -p ~/storage/shared/Movies/1080p
+mkdir -p ~/storage/shared/Movies/720p
+mkdir -p ~/storage/shared/Movies/4K
+
+# TV Shows
+mkdir -p ~/storage/shared/TVShows
+
+# Anime
+mkdir -p ~/storage/shared/Anime
+
+# Documentaries
+mkdir -p ~/storage/shared/Documentaries
+
+# Personal Videos
+mkdir -p ~/storage/shared/PersonalVideos
+```
+
+#### Verify structure:
+```bash
+tree ~/storage/shared/Movies -L 1
+```
+
+**Output:**
+```
+Movies/
+├── 1080p/
+├── 720p/
+└── 4K/
+```
+
+### Step 8: Configure Server to Access Multiple Folders
+
+#### Option 1: Serve entire internal storage
+```bash
+export MEDIA_ROOT="/data/data/com.termux/files/home/storage/shared"
+```
+
+**Serves:** Movies, Downloads, Documents, WhatsApp, etc.
+
+#### Option 2: Serve specific folder
+```bash
+export MEDIA_ROOT="/data/data/com.termux/files/home/storage/shared/Movies"
+```
+
+**Serves:** Only Movies folder
+
+#### Option 3: Serve SD card
+```bash
+export MEDIA_ROOT="/storage/1234-5678/Media"
+```
+
+**Serves:** Media folder on SD card
+
+#### Option 4: Multiple media roots (Advanced)
+Edit `config.py`:
+```python
+# Allow browsing from root of shared storage
+MEDIA_ROOT = "/data/data/com.termux/files/home/storage/shared"
+
+# This lets users navigate:
+# - /Movies/
+# - /Download/
+# - /WhatsApp/Media/
+# - /Telegram/
+# etc.
+```
+
+### Step 9: Permission Troubleshooting
+
+#### Can't access a folder?
+```bash
+# Check permissions
+ls -la ~/storage/shared/FolderName
+```
+
+#### "Permission denied" error?
+```bash
+# Some app folders are restricted
+# Solution: Copy files to accessible location
+
+# Example: Copy from restricted app folder
+cp -r ~/storage/shared/Android/data/com.app/files/Media ~/storage/shared/AppMedia
+```
+
+#### Still can't access?
+```bash
+# Grant all files access (Android 11+)
+# Go to phone settings:
+# Settings → Apps → Termux → Permissions → Files and media
+# → Allow management of all files
+```
+
+### Step 10: Quick Navigation Setup
+
+#### Create navigation aliases:
+```bash
+nano ~/.bashrc
+```
+
+**Add these lines:**
+```bash
+# Storage shortcuts
+alias movies='cd ~/storage/shared/Movies'
+alias downloads='cd ~/storage/shared/Download'
+alias docs='cd ~/storage/shared/Documents'
+alias pics='cd ~/storage/shared/Pictures'
+alias whatsapp='cd ~/storage/shared/WhatsApp/Media'
+alias telegram='cd ~/storage/shared/Telegram'
+alias dcim='cd ~/storage/dcim'
+alias music='cd ~/storage/music'
+
+# SD card (replace XXXX-XXXX with your ID)
+alias sdcard='cd /storage/XXXX-XXXX'
+
+# Quick list all storage
+alias storage='ls -lah ~/storage/ && echo && ls -lah /storage/'
+```
+
+**Reload:**
+```bash
+source ~/.bashrc
+```
+
+**Now use:**
+```bash
+movies      # Jump to Movies folder
+downloads   # Jump to Downloads
+whatsapp    # Jump to WhatsApp media
+storage     # List all storage locations
+```
+
+### Complete Storage Map
+
+```
+📁 Termux Storage Structure:
+│
+├─ ~/storage/shared/          (Internal Storage Root)
+│  ├─ Movies/                 ← Your server videos
+│  ├─ Download/               ← Downloaded files
+│  ├─ Documents/              ← Documents
+│  ├─ Pictures/               ← Photos
+│  ├─ DCIM/                   ← Camera photos
+│  ├─ Music/                  ← Music files
+│  ├─ WhatsApp/               ← WhatsApp media
+│  │  └─ Media/
+│  │     ├─ WhatsApp Images/
+│  │     ├─ WhatsApp Video/
+│  │     └─ WhatsApp Audio/
+│  ├─ Telegram/               ← Telegram files
+│  ├─ Android/                ← App data
+│  │  ├─ data/                (Some restricted)
+│  │  ├─ media/               (Accessible)
+│  │  └─ obb/                 (Game data)
+│  └─ [Any custom folders]
+│
+└─ /storage/XXXX-XXXX/        (SD Card - if available)
+   ├─ Movies/
+   ├─ Backups/
+   └─ [SD card folders]
+```
+
+### Example: Serve Multiple Locations
+
+#### Create a unified media folder:
+```bash
+mkdir -p ~/MediaServer
+cd ~/MediaServer
+
+# Link all media sources
+ln -s ~/storage/shared/Movies ./Movies
+ln -s ~/storage/shared/Download ./Downloads
+ln -s ~/storage/shared/WhatsApp/Media/WhatsApp\ Video ./WhatsApp
+ln -s ~/storage/shared/Telegram/Telegram\ Video ./Telegram
+ln -s /storage/1234-5678/Movies ./SDCard-Movies
+
+# View structure
+ls -lah
+```
+
+**Output:**
+```
+Movies -> ~/storage/shared/Movies
+Downloads -> ~/storage/shared/Download
+WhatsApp -> ~/storage/shared/WhatsApp/Media/WhatsApp Video
+Telegram -> ~/storage/shared/Telegram/Telegram Video
+SDCard-Movies -> /storage/1234-5678/Movies
+```
+
+#### Point server to unified folder:
+```bash
+export MEDIA_ROOT="$HOME/MediaServer"
+python3 app.py
+```
+
+**Now your server shows all folders in one place!** 🎉
 
 ---
 

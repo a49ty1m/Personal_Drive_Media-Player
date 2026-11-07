@@ -604,63 +604,233 @@ whoami
 ### What is Tailscale?
 Secure VPN to access your server from anywhere without port forwarding.
 
-### Step 1: Download Tailscale
+### ⚠️ Tailscale is an Android App, NOT a Termux package!
+
+### Step 1: Install Tailscale App
+
+#### Option A: From Play Store
+1. Open **Google Play Store**
+2. Search: **Tailscale**
+3. Install: `Tailscale` by Tailscale Inc.
+
+#### Option B: From F-Droid (Recommended)
+1. Open **F-Droid**
+2. Search: **Tailscale**
+3. Install: `Tailscale`
+
+**OR download directly:**
+```
+https://tailscale.com/download/android
+```
+
+### Step 2: Setup Tailscale App
+1. Open **Tailscale** app
+2. Tap **"Get Started"** or **"Sign in"**
+3. Choose login method:
+   - Google account
+   - Microsoft account
+   - GitHub account
+   - Email (SSO)
+4. **Authorize** the device
+
+### Step 3: Enable Tailscale VPN
+1. Tap **"Connect"** button in app
+2. Android will ask: "Tailscale wants to set up VPN connection"
+3. Tap **"OK"** or **"Allow"**
+4. VPN key icon appears in status bar ✅
+
+### Step 4: Find Your Tailscale IP
+1. Open **Tailscale** app
+2. You'll see your device listed
+3. Note the IP address: `100.x.x.x`
+
+**Example:**
+```
+my-phone-server
+100.64.123.45
+```
+
+Your Tailscale IP: `100.64.123.45`
+
+### Step 5: Rename Your Device (Optional)
+1. In Tailscale app → Tap your device
+2. Tap **"..."** menu → **"Rename"**
+3. Change to: `my-phone-server` or `termux-media`
+4. Save
+
+### Step 6: Configure Tailscale Settings
+
+#### Keep VPN active:
+1. Tailscale app → Settings (⚙️)
+2. Enable **"Use Tailscale VPN"**
+3. Enable **"Allow incoming connections"** (important!)
+4. Enable **"Run on startup"**
+
+#### Disable battery optimization for Tailscale:
+```
+Settings → Apps → Tailscale
+→ Battery → Battery optimization → Don't optimize
+```
+
+### Step 7: Test Tailscale Connection
+
+#### On your phone (Termux):
 ```bash
-# Get latest Tailscale binary for ARM64
-cd ~
-wget https://pkgs.tailscale.com/stable/tailscale_1.56.1_arm64.tgz
-
-# Extract
-tar xzf tailscale_1.56.1_arm64.tgz
-cd tailscale_1.56.1_arm64
+# Check if Tailscale is active
+ping 100.100.100.100
 ```
 
-### Step 2: Move Binaries
+**Note:** You can't run `tailscale status` in Termux since it's an app, not CLI
+
+#### From another device:
+
+1. **Install Tailscale** on your computer
+2. **Login** with same account
+3. **Connect** to Tailscale VPN
+4. **Check devices:**
+   - You should see your phone listed
+   - Note its Tailscale IP: `100.x.x.x`
+
+#### Test SSH via Tailscale:
 ```bash
-# Move to PATH
-mv tailscale tailscaled $PREFIX/bin/
-chmod +x $PREFIX/bin/tailscale*
+# From your computer (replace with your Tailscale IP)
+ssh -p 8022 u0_a123@100.64.123.45
 ```
 
-### Step 3: Start Tailscale Daemon
+#### Test media server via Tailscale:
 ```bash
-# Create directory
-mkdir -p $PREFIX/var/run
-
-# Start daemon (run in background)
-tailscaled --tun=userspace-networking --socks5-server=localhost:1055 &
+# In browser (from any Tailscale device)
+http://100.64.123.45:8080
 ```
 
-### Step 4: Authenticate
+### Step 8: Access from Anywhere!
+
+Now you can access your phone server from **anywhere in the world**:
+
+#### From computer on different WiFi:
+1. Connect computer to Tailscale
+2. Open: `http://100.64.123.45:8080`
+3. Stream your videos!
+
+#### From another phone:
+1. Install Tailscale on that phone
+2. Login with same account
+3. Open browser: `http://100.64.123.45:8080`
+
+### Tailscale vs Local Network
+
+#### Without Tailscale (Local only):
 ```bash
-tailscale up --hostname=my-phone-server
+# Only works on same WiFi
+ssh -p 8022 u0_a123@192.168.1.100
+http://192.168.1.100:8080
 ```
 
-**Output:**
-```
-To authenticate, visit:
-https://login.tailscale.com/a/xxxxxxxxxxxx
-```
-
-Open that URL on any device → Login → Approve
-
-### Step 5: Verify Connection
+#### With Tailscale (Works anywhere):
 ```bash
-tailscale status
+# Works from anywhere with internet
+ssh -p 8022 u0_a123@100.64.123.45
+http://100.64.123.45:8080
 ```
 
-**Output:**
+### Tailscale Auto-Start (Already Configured)
+
+If you enabled **"Run on startup"** in Tailscale app settings, it will:
+- ✅ Auto-start when phone boots
+- ✅ Reconnect automatically
+- ✅ Keep VPN active in background
+
+**No Termux configuration needed!** The Android app handles everything.
+
+### Troubleshooting Tailscale
+
+#### Can't connect via Tailscale IP?
+
+**Check 1:** Is Tailscale app connected?
 ```
-100.x.x.x   my-phone-server   your-user@   linux   -
+Open Tailscale app → Should say "Connected"
 ```
 
-Your Tailscale IP: `100.x.x.x`
+**Check 2:** Is "Allow incoming connections" enabled?
+```
+Tailscale app → Settings → Allow incoming connections ✓
+```
 
-### Step 6: Test SSH via Tailscale
+**Check 3:** Can you ping the IP?
 ```bash
-# From any device on your Tailscale network:
-ssh -p 8022 u0_a123@100.x.x.x
+# From another Tailscale device
+ping 100.64.123.45
 ```
+
+**Check 4:** Is SSH running on phone?
+```bash
+# In Termux
+ps aux | grep sshd
+```
+
+If not running:
+```bash
+sshd
+```
+
+#### Tailscale disconnects frequently?
+
+**Fix 1:** Disable battery optimization
+```
+Settings → Apps → Tailscale → Battery → Don't optimize
+```
+
+**Fix 2:** Lock Tailscale in memory
+```
+Open Tailscale app → Long press back button → Lock icon
+```
+
+**Fix 3:** Enable "Run on startup"
+```
+Tailscale app → Settings → Run on startup ✓
+```
+
+### Alternative: Tailscale CLI in Termux (Advanced)
+
+If you want Tailscale CLI commands in Termux (optional):
+
+#### Step 1: Install Termux:API
+```bash
+pkg install termux-api
+```
+
+#### Step 2: Check Tailscale status via Android API
+```bash
+# This won't work directly, but you can check VPN status:
+termux-connectivity-info | grep -i vpn
+```
+
+#### Step 3: Use network commands
+```bash
+# Check if Tailscale network is active
+ip addr | grep tailscale
+ip route | grep 100.
+```
+
+**Note:** Full Tailscale CLI isn't available in Termux. Use the Android app for all Tailscale management.
+
+### Security Notes
+
+✅ **Tailscale is secure:**
+- End-to-end encrypted
+- WireGuard protocol
+- No open ports needed
+- NAT traversal built-in
+
+✅ **Only your devices can connect:**
+- Must login with your account
+- Can't be accessed by others
+- Remove devices anytime from Tailscale admin
+
+✅ **Safer than port forwarding:**
+- No exposed ports on router
+- No DDoS risk
+- No need to configure router
 
 ---
 
@@ -792,12 +962,6 @@ sleep 30
 # Start SSH server
 sshd
 
-# Start Tailscale (optional)
-# Uncomment if using Tailscale:
-# tailscaled --tun=userspace-networking --socks5-server=localhost:1055 &
-# sleep 5
-# tailscale up --hostname=my-phone-server
-
 # Start Media Server
 cd ~/Personal_Drive_Media-Player
 export MEDIA_ROOT="/data/data/com.termux/files/home/storage/shared/Movies"
@@ -806,6 +970,8 @@ python3 app.py > ~/server.log 2>&1 &
 # Log startup
 echo "Server started at $(date)" >> ~/boot.log
 ```
+
+**Note:** Tailscale auto-starts via the Android app (if "Run on startup" is enabled), no Termux configuration needed!
 
 ### Step 3: Make Executable
 ```bash

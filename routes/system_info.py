@@ -3,20 +3,70 @@ routes/system_info.py - System information and statistics endpoint
 """
 
 import os
-import psutil
 import platform
 from flask import Blueprint, jsonify
 import config
 
 system_info_bp = Blueprint('system_info', __name__)
 
+# Try to import psutil, make it optional
+try:
+    import psutil
+    PSUTIL_AVAILABLE = True
+except ImportError:
+    PSUTIL_AVAILABLE = False
+
 
 @system_info_bp.route("/api/system-info")
 def get_system_info():
     """
     Return system information: CPU, RAM, storage, platform.
+    Falls back to basic info if psutil is not available.
     """
     try:
+        if not PSUTIL_AVAILABLE:
+            # Fallback: basic info without psutil
+            response = {
+                "cpu": {
+                    "usage_percent": 0,
+                    "cores": 0,
+                    "frequency_mhz": None,
+                },
+                "memory": {
+                    "total_mb": 0,
+                    "used_mb": 0,
+                    "available_mb": 0,
+                    "percent": 0,
+                },
+                "storage": {
+                    "media_root": {
+                        "path": config.MEDIA_ROOT,
+                        "total_gb": 0,
+                        "used_gb": 0,
+                        "free_gb": 0,
+                        "percent": 0,
+                    }
+                },
+                "cache": {
+                    "total_mb": 0,
+                    "used_mb": 0,
+                    "free_mb": 0,
+                },
+                "system": {
+                    "platform": platform.system(),
+                    "platform_release": platform.release(),
+                    "architecture": platform.machine(),
+                    "hostname": platform.node(),
+                    "python_version": platform.python_version(),
+                },
+                "uptime_hours": 0,
+                "active_transcodes": 0,
+                "psutil_available": False,
+                "message": "Install psutil for live stats: pip install psutil"
+            }
+            return jsonify(response)
+        
+        # Full stats with psutil
         # CPU Information
         cpu_percent = psutil.cpu_percent(interval=1)
         cpu_count = psutil.cpu_count(logical=True)
@@ -81,9 +131,10 @@ def get_system_info():
             "system": system_info,
             "uptime_hours": round(uptime_seconds / 3600, 1),
             "active_transcodes": active_jobs,
+            "psutil_available": True,
         }
         
         return jsonify(response)
     
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": str(e), "psutil_available": PSUTIL_AVAILABLE}), 500

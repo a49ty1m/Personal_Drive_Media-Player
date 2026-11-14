@@ -72,6 +72,17 @@
         fetch('/api/system-info')
           .then(response => response.json())
           .then(data => {
+            // Check if psutil is available
+            if (data.psutil_available === false) {
+              // Show message instead of stats
+              document.getElementById('cpuUsage').textContent = 'N/A';
+              document.getElementById('ramUsage').textContent = 'Install psutil';
+              document.getElementById('storageUsage').textContent = 'pip install psutil';
+              document.getElementById('activeTranscodes').textContent = '0 jobs';
+              document.getElementById('systemUptime').textContent = 'N/A';
+              return;
+            }
+            
             // CPU
             document.getElementById('cpuUsage').textContent = data.cpu.usage_percent + '%';
             
@@ -134,6 +145,10 @@
           })
           .catch(err => {
             console.error('Failed to fetch system info:', err);
+            // Show error state
+            document.getElementById('cpuUsage').textContent = 'Error';
+            document.getElementById('ramUsage').textContent = 'Error';
+            document.getElementById('storageUsage').textContent = 'Error';
           });
       }
       

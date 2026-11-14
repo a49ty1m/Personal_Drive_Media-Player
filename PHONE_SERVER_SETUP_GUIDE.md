@@ -1344,6 +1344,36 @@ pkg install -y python-psutil
 ffmpeg -version
 ```
 
+---
+
+### CPU Shows "N/A" on System Info Bar
+
+**This is NORMAL on Android/Termux!**
+
+#### Why?
+Android restricts access to `/proc/stat` for security reasons. Apps cannot read system-wide CPU usage.
+
+#### What works?
+- ✅ **RAM usage** - Shows correctly
+- ✅ **Storage usage** - Shows correctly  
+- ✅ **Uptime** - Shows correctly
+- ✅ **Active transcodes** - Shows correctly
+- ❌ **CPU percentage** - Shows "N/A" (Android restriction)
+
+#### Is this a problem?
+**No!** Your server works perfectly. You just can't monitor CPU percentage on Android.
+
+#### Alternative monitoring:
+```bash
+# Use Termux's top command
+top
+
+# Or check load average
+uptime
+```
+
+On **Linux desktop** the CPU percentage works fine - this is only an Android limitation.
+
 ### Can't Connect via SSH
 
 #### Check SSH daemon:

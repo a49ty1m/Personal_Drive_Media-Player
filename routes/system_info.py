@@ -84,8 +84,13 @@ def get_system_info():
             boot_time = psutil.boot_time()
             from datetime import datetime
             uptime_seconds = datetime.now().timestamp() - boot_time
+        except (PermissionError, OSError) as e:
+            # Android/Termux restricts /proc/stat but uptime calculation still works
+            # This is just a warning, not a failure
+            logger.debug(f"boot_time access restricted (Android): {e}")
+            uptime_seconds = 0
         except Exception as e:
-            logger.error(f"Error getting uptime: {e}")
+            logger.debug(f"Could not get uptime: {e}")
             uptime_seconds = 0
         
         # Platform info

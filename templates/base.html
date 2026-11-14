@@ -28,11 +28,6 @@
   <!-- System Info Bar -->
   <div class="system-info-bar" id="systemInfoBar">
     <div class="system-stat">
-      <span class="stat-icon">🖥️</span>
-      <span class="stat-label">CPU:</span>
-      <span class="stat-value" id="cpuUsage">--</span>
-    </div>
-    <div class="system-stat">
       <span class="stat-icon">🧠</span>
       <span class="stat-label">RAM:</span>
       <span class="stat-value" id="ramUsage">--</span>
@@ -75,21 +70,11 @@
             // Check if psutil is available
             if (data.psutil_available === false) {
               // Show message instead of stats
-              document.getElementById('cpuUsage').textContent = 'N/A';
               document.getElementById('ramUsage').textContent = 'Install psutil';
-              document.getElementById('storageUsage').textContent = 'pip install psutil';
+              document.getElementById('storageUsage').textContent = 'pkg install python-psutil';
               document.getElementById('activeTranscodes').textContent = '0 jobs';
               document.getElementById('systemUptime').textContent = 'N/A';
               return;
-            }
-            
-            // CPU
-            const cpuPercent = data.cpu.usage_percent;
-            if (cpuPercent === null || cpuPercent === undefined) {
-              document.getElementById('cpuUsage').textContent = 'N/A';
-              document.getElementById('cpuUsage').style.color = '#8b9ba8';
-            } else {
-              document.getElementById('cpuUsage').textContent = cpuPercent + '%';
             }
             
             // RAM
@@ -121,19 +106,7 @@
             }
             document.getElementById('systemUptime').textContent = uptimeText;
             
-            // Color coding based on usage
-            const cpuEl = document.getElementById('cpuUsage');
-            if (cpuPercent !== null && cpuPercent !== undefined) {
-              if (cpuPercent > 80) {
-                cpuEl.style.color = '#ef4444';
-              } else if (cpuPercent > 50) {
-                cpuEl.style.color = '#f59e0b';
-              } else {
-                cpuEl.style.color = '#10b981';
-              }
-            }
-            
-            const ramEl = document.getElementById('ramUsage');
+            // Color coding based on usage            const ramEl = document.getElementById('ramUsage');
             if (ramPercent > 85) {
               ramEl.style.color = '#ef4444';
             } else if (ramPercent > 70) {
@@ -154,7 +127,6 @@
           .catch(err => {
             console.error('Failed to fetch system info:', err);
             // Show error state
-            document.getElementById('cpuUsage').textContent = 'Error';
             document.getElementById('ramUsage').textContent = 'Error';
             document.getElementById('storageUsage').textContent = 'Error';
           });

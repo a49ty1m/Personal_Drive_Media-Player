@@ -390,9 +390,14 @@ kbd {
 
 /* ============================================================
    SYSTEM INFO BAR
+   Sticks to top on pages without navigation,
+   or below navigation when nav is present
    ============================================================ */
 
 .system-info-bar {
+  position: sticky;
+  top: 0;
+  z-index: 99;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -402,6 +407,13 @@ kbd {
   border-bottom: 1px solid var(--border);
   font-size: 0.875rem;
   flex-wrap: wrap;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* When there's a top-nav above it, position below that nav */
+.top-nav ~ * .system-info-bar,
+.has-top-nav .system-info-bar {
+  top: 72px; /* Height of top-nav */
 }
 
 .system-stat {

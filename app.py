@@ -191,6 +191,7 @@ def create_app():
     from routes.folder   import folder_bp
     from routes.rename   import rename_bp
     from routes.favorites import favorites_bp
+    from routes.system_info import system_info_bp
 
     _base = os.path.dirname(os.path.abspath(__file__))
 
@@ -211,6 +212,7 @@ def create_app():
     app.register_blueprint(folder_bp)
     app.register_blueprint(rename_bp)
     app.register_blueprint(favorites_bp)
+    app.register_blueprint(system_info_bp)
 
     # ---- Catch-all: redirect unknown URLs to the browser ----
     @app.errorhandler(404)

@@ -386,3 +386,76 @@ kbd {
   }
 }
 
+
+
+/* ============================================================
+   SYSTEM INFO BAR
+   ============================================================ */
+
+.system-info-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+  padding: 0.6rem 1.5rem;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  font-size: 0.875rem;
+  flex-wrap: wrap;
+}
+
+.system-stat {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--text-muted);
+}
+
+.stat-icon {
+  font-size: 1rem;
+}
+
+.stat-label {
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.stat-value {
+  font-weight: 600;
+  color: var(--text);
+  font-family: 'Courier New', monospace;
+  font-size: 0.85rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .system-info-bar {
+    gap: 1rem;
+    padding: 0.5rem 1rem;
+    font-size: 0.8rem;
+  }
+  
+  .system-stat {
+    gap: 0.3rem;
+  }
+  
+  .stat-icon {
+    font-size: 0.9rem;
+  }
+  
+  .stat-label {
+    display: none; /* Hide labels on mobile, keep icons and values */
+  }
+}
+
+@media (max-width: 480px) {
+  .system-info-bar {
+    gap: 0.5rem;
+    padding: 0.4rem 0.8rem;
+    font-size: 0.75rem;
+  }
+  
+  .stat-value {
+    font-size: 0.75rem;
+  }
+}

@@ -25,6 +25,35 @@
     </div>
   </nav>
 
+  <!-- System Info Bar -->
+  <div class="system-info-bar" id="systemInfoBar">
+    <div class="system-stat">
+      <span class="stat-icon">🖥️</span>
+      <span class="stat-label">CPU:</span>
+      <span class="stat-value" id="cpuUsage">--</span>
+    </div>
+    <div class="system-stat">
+      <span class="stat-icon">🧠</span>
+      <span class="stat-label">RAM:</span>
+      <span class="stat-value" id="ramUsage">--</span>
+    </div>
+    <div class="system-stat">
+      <span class="stat-icon">💾</span>
+      <span class="stat-label">Storage:</span>
+      <span class="stat-value" id="storageUsage">--</span>
+    </div>
+    <div class="system-stat">
+      <span class="stat-icon">📹</span>
+      <span class="stat-label">Active:</span>
+      <span class="stat-value" id="activeTranscodes">0</span>
+    </div>
+    <div class="system-stat">
+      <span class="stat-icon">⏱️</span>
+      <span class="stat-label">Uptime:</span>
+      <span class="stat-value" id="systemUptime">--</span>
+    </div>
+  </div>
+
   <main class="wrapper">
     {% block content %}{% endblock %}
   </main>
@@ -35,6 +64,87 @@
   <script src="/static/js/menu.js?v=11"></script>
   <script src="/static/js/folder.js?v=11"></script>
   <script src="/static/js/rename.js?v=11"></script>
+  
+  <!-- System Info Auto-Update -->
+  <script>
+    (function() {
+      function updateSystemInfo() {
+        fetch('/api/system-info')
+          .then(response => response.json())
+          .then(data => {
+            // CPU
+            document.getElementById('cpuUsage').textContent = data.cpu.usage_percent + '%';
+            
+            // RAM
+            const ramPercent = data.memory.percent;
+            const ramUsed = data.memory.used_mb;
+            const ramTotal = data.memory.total_mb;
+            document.getElementById('ramUsage').textContent = 
+              Math.round(ramUsed) + '/' + Math.round(ramTotal) + ' MB (' + ramPercent + '%)';
+            
+            // Storage
+            const storagePercent = data.storage.media_root.percent;
+            const storageFree = data.storage.media_root.free_gb;
+            const storageTotal = data.storage.media_root.total_gb;
+            document.getElementById('storageUsage').textContent = 
+              storageFree.toFixed(1) + '/' + storageTotal.toFixed(1) + ' GB free (' + (100 - storagePercent).toFixed(0) + '%)';
+            
+            // Active transcodes
+            document.getElementById('activeTranscodes').textContent = data.active_transcodes + ' jobs';
+            
+            // Uptime
+            const uptimeHours = data.uptime_hours;
+            let uptimeText;
+            if (uptimeHours < 1) {
+              uptimeText = Math.round(uptimeHours * 60) + 'm';
+            } else if (uptimeHours < 24) {
+              uptimeText = uptimeHours.toFixed(1) + 'h';
+            } else {
+              uptimeText = Math.floor(uptimeHours / 24) + 'd ' + Math.round(uptimeHours % 24) + 'h';
+            }
+            document.getElementById('systemUptime').textContent = uptimeText;
+            
+            // Color coding based on usage
+            const cpuEl = document.getElementById('cpuUsage');
+            if (data.cpu.usage_percent > 80) {
+              cpuEl.style.color = '#ef4444';
+            } else if (data.cpu.usage_percent > 50) {
+              cpuEl.style.color = '#f59e0b';
+            } else {
+              cpuEl.style.color = '#10b981';
+            }
+            
+            const ramEl = document.getElementById('ramUsage');
+            if (ramPercent > 85) {
+              ramEl.style.color = '#ef4444';
+            } else if (ramPercent > 70) {
+              ramEl.style.color = '#f59e0b';
+            } else {
+              ramEl.style.color = '#10b981';
+            }
+            
+            const storageEl = document.getElementById('storageUsage');
+            if (storagePercent > 90) {
+              storageEl.style.color = '#ef4444';
+            } else if (storagePercent > 75) {
+              storageEl.style.color = '#f59e0b';
+            } else {
+              storageEl.style.color = '#10b981';
+            }
+          })
+          .catch(err => {
+            console.error('Failed to fetch system info:', err);
+          });
+      }
+      
+      // Update on load
+      updateSystemInfo();
+      
+      // Update every 5 seconds
+      setInterval(updateSystemInfo, 5000);
+    })();
+  </script>
+  
   {% block scripts %}{% endblock %}
 
 </body>

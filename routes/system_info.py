@@ -16,6 +16,8 @@ try:
     import psutil
     PSUTIL_AVAILABLE = True
     logger.info("psutil loaded successfully")
+    # Initialize CPU measurement on module load so first call has data
+    psutil.cpu_percent(interval=None)
 except ImportError:
     PSUTIL_AVAILABLE = False
     logger.warning("psutil not available - system stats will be disabled")
@@ -63,7 +65,14 @@ def get_system_info():
         
         # CPU Information
         try:
-            cpu_percent = psutil.cpu_percent(interval=0.5)  # Shorter interval for mobile
+            # Use interval=None for non-blocking call (uses data since last call)
+            # The module initialization already started the measurement
+            cpu_percent = psutil.cpu_percent(interval=None)
+            
+            # If first reading is 0, do a quick blocking call
+            if cpu_percent == 0.0 or cpu_percent == 0:
+                cpu_percent = psutil.cpu_percent(interval=0.1)
+            
             cpu_count = psutil.cpu_count(logical=True)
             cpu_freq = psutil.cpu_freq()
         except Exception as e:

@@ -17,9 +17,16 @@ try:
     PSUTIL_AVAILABLE = True
     logger.info("psutil loaded successfully")
     # Initialize CPU measurement on module load so first call has data
-    psutil.cpu_percent(interval=None)
+    # Wrap in try-except because Android/Termux may restrict /proc/stat access
+    try:
+        psutil.cpu_percent(interval=None)
+        CPU_AVAILABLE = True
+    except (PermissionError, OSError) as e:
+        logger.warning(f"CPU stats unavailable (Android restriction): {e}")
+        CPU_AVAILABLE = False
 except ImportError:
     PSUTIL_AVAILABLE = False
+    CPU_AVAILABLE = False
     logger.warning("psutil not available - system stats will be disabled")
 
 
@@ -65,19 +72,30 @@ def get_system_info():
         
         # CPU Information
         try:
-            # Use interval=None for non-blocking call (uses data since last call)
-            # The module initialization already started the measurement
-            cpu_percent = psutil.cpu_percent(interval=None)
-            
-            # If first reading is 0, do a quick blocking call
-            if cpu_percent == 0.0 or cpu_percent == 0:
-                cpu_percent = psutil.cpu_percent(interval=0.1)
-            
-            cpu_count = psutil.cpu_count(logical=True)
-            cpu_freq = psutil.cpu_freq()
+            if not CPU_AVAILABLE:
+                # Android/Termux restricts /proc/stat access
+                cpu_percent = None  # Will show "N/A" in UI
+                cpu_count = psutil.cpu_count(logical=True) if PSUTIL_AVAILABLE else 0
+                cpu_freq = None
+            else:
+                # Use interval=None for non-blocking call (uses data since last call)
+                # The module initialization already started the measurement
+                cpu_percent = psutil.cpu_percent(interval=None)
+                
+                # If first reading is 0, do a quick blocking call
+                if cpu_percent == 0.0 or cpu_percent == 0:
+                    cpu_percent = psutil.cpu_percent(interval=0.1)
+                
+                cpu_count = psutil.cpu_count(logical=True)
+                cpu_freq = psutil.cpu_freq()
+        except (PermissionError, OSError) as e:
+            logger.warning(f"CPU info unavailable (permission denied): {e}")
+            cpu_percent = None
+            cpu_count = psutil.cpu_count(logical=True) if PSUTIL_AVAILABLE else 0
+            cpu_freq = None
         except Exception as e:
             logger.error(f"Error getting CPU info: {e}")
-            cpu_percent = 0
+            cpu_percent = None
             cpu_count = 0
             cpu_freq = None
         
@@ -134,7 +152,7 @@ def get_system_info():
         
         response = {
             "cpu": {
-                "usage_percent": round(cpu_percent, 1),
+                "usage_percent": round(cpu_percent, 1) if cpu_percent is not None else None,
                 "cores": cpu_count,
                 "frequency_mhz": round(cpu_freq.current, 0) if cpu_freq else None,
             },

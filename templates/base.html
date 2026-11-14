@@ -84,7 +84,13 @@
             }
             
             // CPU
-            document.getElementById('cpuUsage').textContent = data.cpu.usage_percent + '%';
+            const cpuPercent = data.cpu.usage_percent;
+            if (cpuPercent === null || cpuPercent === undefined) {
+              document.getElementById('cpuUsage').textContent = 'N/A';
+              document.getElementById('cpuUsage').style.color = '#8b9ba8';
+            } else {
+              document.getElementById('cpuUsage').textContent = cpuPercent + '%';
+            }
             
             // RAM
             const ramPercent = data.memory.percent;
@@ -117,12 +123,14 @@
             
             // Color coding based on usage
             const cpuEl = document.getElementById('cpuUsage');
-            if (data.cpu.usage_percent > 80) {
-              cpuEl.style.color = '#ef4444';
-            } else if (data.cpu.usage_percent > 50) {
-              cpuEl.style.color = '#f59e0b';
-            } else {
-              cpuEl.style.color = '#10b981';
+            if (cpuPercent !== null && cpuPercent !== undefined) {
+              if (cpuPercent > 80) {
+                cpuEl.style.color = '#ef4444';
+              } else if (cpuPercent > 50) {
+                cpuEl.style.color = '#f59e0b';
+              } else {
+                cpuEl.style.color = '#10b981';
+              }
             }
             
             const ramEl = document.getElementById('ramUsage');

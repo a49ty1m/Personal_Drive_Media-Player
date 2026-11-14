@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% block title %}☁️ My Drive + 🎬 Media Player{% endblock %}</title>
-  <link rel="stylesheet" href="/static/css/style.css?v=11">
-  <link rel="stylesheet" href="/static/css/drive.css?v=11">
+  <link rel="stylesheet" href="/static/css/style.css?v=12">
+  <link rel="stylesheet" href="/static/css/drive.css?v=12">
   {% block head %}{% endblock %}
 </head>
 <body>
@@ -53,12 +53,12 @@
     {% block content %}{% endblock %}
   </main>
 
-  <script src="/static/js/utils.js?v=11"></script>
-  <script src="/static/js/upload.js?v=11"></script>
-  <script src="/static/js/delete.js?v=11"></script>
-  <script src="/static/js/menu.js?v=11"></script>
-  <script src="/static/js/folder.js?v=11"></script>
-  <script src="/static/js/rename.js?v=11"></script>
+  <script src="/static/js/utils.js?v=12"></script>
+  <script src="/static/js/upload.js?v=12"></script>
+  <script src="/static/js/delete.js?v=12"></script>
+  <script src="/static/js/menu.js?v=12"></script>
+  <script src="/static/js/folder.js?v=12"></script>
+  <script src="/static/js/rename.js?v=12"></script>
   
   <!-- System Info Auto-Update -->
   <script>
@@ -105,8 +105,9 @@
               uptimeText = Math.floor(uptimeHours / 24) + 'd ' + Math.round(uptimeHours % 24) + 'h';
             }
             document.getElementById('systemUptime').textContent = uptimeText;
-            
-            // Color coding based on usage            const ramEl = document.getElementById('ramUsage');
+
+            // Color coding based on usage
+            const ramEl = document.getElementById('ramUsage');
             if (ramPercent > 85) {
               ramEl.style.color = '#ef4444';
             } else if (ramPercent > 70) {
@@ -114,7 +115,7 @@
             } else {
               ramEl.style.color = '#10b981';
             }
-            
+
             const storageEl = document.getElementById('storageUsage');
             if (storagePercent > 90) {
               storageEl.style.color = '#ef4444';

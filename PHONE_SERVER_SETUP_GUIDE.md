@@ -504,16 +504,41 @@ Python 3.11.x
 pip 23.x
 ```
 
-### Step 3: Install Python Packages
+### Step 3: Install Python Packages (Termux Way)
 ```bash
-# Install Flask and dependencies
+# Install Flask via pip
 pip install --upgrade pip
-pip install flask requests
+pip install flask
+
+# Install psutil via pkg (Termux package manager)
+pkg install -y python-psutil
 ```
 
-### Step 4: Test Python
+**Why use pkg for psutil?**
+- Termux has precompiled `python-psutil` package
+- Much faster than compiling from source
+- `pip install psutil` may fail on Android
+
+### Step 4: Alternative - Install from requirements.txt
 ```bash
-python -c "import flask; print(flask.__version__)"
+# This works but psutil may fail to compile
+cd ~/Personal_Drive_Media-Player
+pip install -r requirements.txt
+
+# If psutil fails, install via pkg instead:
+pkg install -y python-psutil
+```
+
+### Step 5: Test Python
+```bash
+python -c "import flask; print('Flask:', flask.__version__)"
+python -c "import psutil; print('psutil:', psutil.__version__)"
+```
+
+**Expected output:**
+```
+Flask: 2.3.x
+psutil: 5.9.x
 ```
 
 ---
@@ -1288,11 +1313,30 @@ which python3
 #### Check dependencies:
 ```bash
 pip list | grep -i flask
+pip list | grep -i psutil
+```
+
+#### Missing psutil?
+```bash
+# Termux way (recommended):
+pkg install -y python-psutil
+
+# OR via pip (may fail):
+pip install psutil
 ```
 
 #### Reinstall Flask:
 ```bash
 pip install --force-reinstall flask
+```
+
+#### Install all requirements (Termux):
+```bash
+# Install Flask via pip
+pip install flask
+
+# Install psutil via pkg
+pkg install -y python-psutil
 ```
 
 #### Check FFmpeg:
@@ -1482,6 +1526,10 @@ DNS: 8.8.8.8
 ```bash
 # Update packages
 pkg update && pkg upgrade
+
+# Install Python dependencies
+pip install flask
+pkg install python-psutil
 
 # Start SSH
 sshd

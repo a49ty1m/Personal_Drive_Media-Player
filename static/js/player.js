@@ -47,40 +47,8 @@
   var netErrCount   = 0;
   var myTextTracks  = [];   // TextTrack objects for our subtitle tracks
   var saveTimer     = null;  // Timer for saving position
-  var osdTimer      = null;  // Timer for OSD auto-hide
 
-  /* ==========================================================
-     OSD (ON-SCREEN DISPLAY) - VLC-style notifications
-  ========================================================== */
-
-  function showOSD(icon, text) {
-    if (!osdEl || !osdIcon || !osdText) return;
-    
-    // Clear any existing timer
-    if (osdTimer) {
-      clearTimeout(osdTimer);
-      osdTimer = null;
-    }
-    
-    // Set content
-    osdIcon.textContent = icon;
-    osdText.textContent = text;
-    
-    // Show with animation
-    osdEl.classList.remove("osd-fade");
-    osdEl.classList.add("osd-visible");
-    
-    // Auto-hide after 1.2 seconds (matching shortcuts.js timing)
-    osdTimer = setTimeout(function() {
-      osdEl.classList.add("osd-fade");
-      setTimeout(function() {
-        osdEl.classList.remove("osd-visible", "osd-fade");
-      }, 500);
-    }, 1200);
-  }
-
-  // Expose showOSD globally so shortcuts.js can use it too
-  window.showOSD = showOSD;
+  // Note: showOSD() is now in utils.js (loaded globally)
 
   /* ==========================================================
      POSITION SAVING & RESUME

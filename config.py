@@ -38,17 +38,8 @@ VIDEO_EXTENSIONS = {
 # When None, shows all file types; when set to a set, only shows those extensions.
 BROWSEABLE_EXTENSIONS = None  # Show all files
 
-# Common file type categories for icons
-FILE_CATEGORIES = {
-    "video": {".mkv", ".mp4", ".webm", ".m4v", ".mov", ".avi", ".ts", ".flv", ".wmv"},
-    "audio": {".mp3", ".wav", ".flac", ".aac", ".ogg", ".m4a", ".wma"},
-    "image": {".jpg", ".jpeg", ".png", ".gif", ".bmp", ".svg", ".webp", ".ico"},
-    "document": {".pdf", ".doc", ".docx", ".txt", ".odt", ".rtf"},
-    "spreadsheet": {".xls", ".xlsx", ".csv", ".ods"},
-    "presentation": {".ppt", ".pptx", ".odp"},
-    "archive": {".zip", ".rar", ".7z", ".tar", ".gz", ".bz2", ".xz"},
-    "code": {".py", ".js", ".html", ".css", ".java", ".cpp", ".c", ".h", ".sh", ".json", ".xml", ".yml", ".yaml"},
-}
+# Note: FILE_CATEGORIES was removed as unused (no references in codebase)
+# Icon detection is now handled by frontend JavaScript based on file extensions
 
 # ============================================================
 # NETWORK

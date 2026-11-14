@@ -52,3 +52,45 @@ function showNotification(message, type) {
 
 // Make globally accessible
 window.showNotification = showNotification;
+
+
+/**
+ * Show VLC-style OSD (On-Screen Display) notification
+ * Displays floating message on video player
+ * 
+ * @param {string} icon - Icon emoji (e.g., '🎵', '💬', '🔊')
+ * @param {string} text - Text to display (e.g., 'Audio: English')
+ */
+function showOSD(icon, text) {
+    const osdEl = document.getElementById('vlc-osd');
+    if (!osdEl) return;
+    
+    const osdIcon = osdEl.querySelector('.osd-icon');
+    const osdText = osdEl.querySelector('.osd-text');
+    if (!osdIcon || !osdText) return;
+    
+    // Clear any existing timer
+    if (window.osdTimer) {
+        clearTimeout(window.osdTimer);
+        window.osdTimer = null;
+    }
+    
+    // Set content
+    osdIcon.textContent = icon;
+    osdText.textContent = text;
+    
+    // Show with animation
+    osdEl.classList.remove('osd-fade');
+    osdEl.classList.add('osd-visible');
+    
+    // Auto-hide after 1.2 seconds
+    window.osdTimer = setTimeout(function() {
+        osdEl.classList.add('osd-fade');
+        setTimeout(function() {
+            osdEl.classList.remove('osd-visible', 'osd-fade');
+        }, 500);
+    }, 1200);
+}
+
+// Expose globally for all scripts
+window.showOSD = showOSD;

@@ -17,54 +17,9 @@
   });
 
   /* ----------------------------------------------------------
-     OSD (On-Screen Display) — shows a brief notification
-     over the video when a shortcut fires.
+     OSD (On-Screen Display) — imported from utils.js
   ---------------------------------------------------------- */
-  var osdEl       = null;
-  var osdTimer    = null;
-  var osdIconEl   = null;
-  var osdTextEl   = null;
-
-  function createOSD() {
-    if (document.getElementById("vlc-osd")) return;
-
-    osdEl = document.createElement("div");
-    osdEl.id = "vlc-osd";
-    osdEl.setAttribute("aria-live", "polite");
-    osdEl.setAttribute("aria-atomic", "true");
-
-    osdIconEl = document.createElement("span");
-    osdIconEl.className = "osd-icon";
-
-    osdTextEl = document.createElement("span");
-    osdTextEl.className = "osd-text";
-
-    osdEl.appendChild(osdIconEl);
-    osdEl.appendChild(osdTextEl);
-
-    var wrapper = document.querySelector(".player-wrapper");
-    if (wrapper) {
-      wrapper.appendChild(osdEl);
-    } else {
-      document.body.appendChild(osdEl);
-    }
-  }
-
-  function showOSD(icon, text) {
-    if (!osdEl) createOSD();
-    osdIconEl.textContent = icon;
-    osdTextEl.textContent = text;
-    osdEl.classList.remove("osd-fade");
-    osdEl.classList.add("osd-visible");
-
-    if (osdTimer) clearTimeout(osdTimer);
-    osdTimer = setTimeout(function () {
-      osdEl.classList.add("osd-fade");
-      osdTimer = setTimeout(function () {
-        osdEl.classList.remove("osd-visible", "osd-fade");
-      }, 500);
-    }, 1200);
-  }
+  // Using showOSD() from utils.js for consistency
 
   /* ----------------------------------------------------------
      Shortcut help panel
@@ -648,8 +603,6 @@
   }
 
   function initShortcuts() {
-    createOSD();
-
     /*
      * Capture phase (true) = runs BEFORE the browser's built-in
      * <video controls> keyboard handler, which lives in bubble phase.

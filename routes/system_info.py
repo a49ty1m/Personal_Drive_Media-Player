@@ -4,17 +4,21 @@ routes/system_info.py - System information and statistics endpoint
 
 import os
 import platform
+import logging
 from flask import Blueprint, jsonify
 import config
 
 system_info_bp = Blueprint('system_info', __name__)
+logger = logging.getLogger("media-server")
 
 # Try to import psutil, make it optional
 try:
     import psutil
     PSUTIL_AVAILABLE = True
+    logger.info("psutil loaded successfully")
 except ImportError:
     PSUTIL_AVAILABLE = False
+    logger.warning("psutil not available - system stats will be disabled")
 
 
 @system_info_bp.route("/api/system-info")
@@ -25,19 +29,11 @@ def get_system_info():
     """
     try:
         if not PSUTIL_AVAILABLE:
+            logger.warning("psutil not available, returning placeholder data")
             # Fallback: basic info without psutil
             response = {
-                "cpu": {
-                    "usage_percent": 0,
-                    "cores": 0,
-                    "frequency_mhz": None,
-                },
-                "memory": {
-                    "total_mb": 0,
-                    "used_mb": 0,
-                    "available_mb": 0,
-                    "percent": 0,
-                },
+                "cpu": {"usage_percent": 0, "cores": 0, "frequency_mhz": None},
+                "memory": {"total_mb": 0, "used_mb": 0, "available_mb": 0, "percent": 0},
                 "storage": {
                     "media_root": {
                         "path": config.MEDIA_ROOT,
@@ -47,11 +43,7 @@ def get_system_info():
                         "percent": 0,
                     }
                 },
-                "cache": {
-                    "total_mb": 0,
-                    "used_mb": 0,
-                    "free_mb": 0,
-                },
+                "cache": {"total_mb": 0, "used_mb": 0, "free_mb": 0},
                 "system": {
                     "platform": platform.system(),
                     "platform_release": platform.release(),
@@ -62,32 +54,57 @@ def get_system_info():
                 "uptime_hours": 0,
                 "active_transcodes": 0,
                 "psutil_available": False,
-                "message": "Install psutil for live stats: pip install psutil"
+                "message": "Install psutil: pkg install python-psutil"
             }
             return jsonify(response)
         
         # Full stats with psutil
+        logger.debug("Fetching system stats with psutil")
+        
         # CPU Information
-        cpu_percent = psutil.cpu_percent(interval=1)
-        cpu_count = psutil.cpu_count(logical=True)
-        cpu_freq = psutil.cpu_freq()
+        try:
+            cpu_percent = psutil.cpu_percent(interval=0.5)  # Shorter interval for mobile
+            cpu_count = psutil.cpu_count(logical=True)
+            cpu_freq = psutil.cpu_freq()
+        except Exception as e:
+            logger.error(f"Error getting CPU info: {e}")
+            cpu_percent = 0
+            cpu_count = 0
+            cpu_freq = None
         
         # Memory Information
-        memory = psutil.virtual_memory()
+        try:
+            memory = psutil.virtual_memory()
+        except Exception as e:
+            logger.error(f"Error getting memory info: {e}")
+            memory = type('obj', (object,), {
+                'total': 0, 'used': 0, 'available': 0, 'percent': 0
+            })()
         
         # Storage Information (media root)
-        storage = psutil.disk_usage(config.MEDIA_ROOT)
+        try:
+            storage = psutil.disk_usage(config.MEDIA_ROOT)
+        except Exception as e:
+            logger.error(f"Error getting storage info for {config.MEDIA_ROOT}: {e}")
+            storage = type('obj', (object,), {
+                'total': 0, 'used': 0, 'free': 0, 'percent': 0
+            })()
         
         # Cache storage
         try:
             cache_storage = psutil.disk_usage(config.CACHE_DIR)
-        except:
+        except Exception as e:
+            logger.debug(f"Cache storage not available: {e}")
             cache_storage = None
         
         # System uptime
-        boot_time = psutil.boot_time()
-        from datetime import datetime
-        uptime_seconds = datetime.now().timestamp() - boot_time
+        try:
+            boot_time = psutil.boot_time()
+            from datetime import datetime
+            uptime_seconds = datetime.now().timestamp() - boot_time
+        except Exception as e:
+            logger.error(f"Error getting uptime: {e}")
+            uptime_seconds = 0
         
         # Platform info
         system_info = {
@@ -99,8 +116,12 @@ def get_system_info():
         }
         
         # Active transcoding jobs
-        from transcoding.manager import manager
-        active_jobs = len(manager._registry)
+        try:
+            from transcoding.manager import manager
+            active_jobs = len(manager._registry)
+        except Exception as e:
+            logger.error(f"Error getting active jobs: {e}")
+            active_jobs = 0
         
         response = {
             "cpu": {
@@ -134,7 +155,13 @@ def get_system_info():
             "psutil_available": True,
         }
         
+        logger.debug(f"System stats: CPU {cpu_percent}%, RAM {memory.percent}%, Storage {storage.percent}%")
         return jsonify(response)
     
     except Exception as e:
-        return jsonify({"error": str(e), "psutil_available": PSUTIL_AVAILABLE}), 500
+        logger.error(f"System info endpoint error: {e}", exc_info=True)
+        return jsonify({
+            "error": str(e), 
+            "psutil_available": PSUTIL_AVAILABLE,
+            "message": "Error fetching system info. Check server logs."
+        }), 500

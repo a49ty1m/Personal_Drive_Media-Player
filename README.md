@@ -48,8 +48,9 @@ A lightweight, feature-rich media server and personal cloud storage solution tha
 - **File Type Icons** - Visual identification (🎬 videos, 📄 documents, 🖼️ images, 🎵 audio)
 - **File Size Display** - Human-readable formats (KB, MB, GB)
 - **Smooth Animations** - Intuitive visual feedback and transitions
-- **Sticky Navigation** - Top nav and filter toolbar stay accessible while scrolling
+- **Sticky Navigation** - Top nav stays fixed; system info bar locks directly below it while scrolling
 - **Active Page Highlighting** - Current section highlighted in navigation
+- **Live System Info Bar** - RAM, storage, uptime and active transcodes displayed in a sticky bar below the nav
 
 ### 🔒 Security
 - **Path Traversal Protection** - Prevents directory escape attacks
@@ -133,6 +134,9 @@ pkg update && pkg upgrade -y
 3. **Install Dependencies**
 ```bash
 pkg install python ffmpeg -y
+
+# psutil must be installed via pkg on Android (pip compilation fails)
+pkg install python-psutil -y
 ```
 
 ### Installation
@@ -147,6 +151,12 @@ git clone <your-repo-url> media-server
 2. **Install Python Dependencies**
 ```bash
 cd ~/media-server
+pip install flask
+
+# Install psutil via pkg (pip compilation fails on Android)
+pkg install python-psutil -y
+
+# Or install from requirements.txt (psutil may fail — use pkg instead)
 pip install -r requirements.txt
 ```
 
@@ -310,11 +320,12 @@ All settings in `config.py` can be overridden with environment variables:
 |----------|---------|-------------|
 | `MAX_TRANSCODES` | `1` | Max simultaneous FFmpeg processes |
 | `HLS_SEGMENT_TIME` | `6` | Segment duration in seconds |
-| `VIDEO_CRF` | `23` | H.264 quality (18-28, lower=better) |
-| `CACHE_DIR` | `/tmp/media-server/cache` | HLS output directory |
+| `VIDEO_CRF` | `28` | H.264 quality (18–28, lower=better quality, higher=faster) |
+| `VIDEO_PRESET` | `ultrafast` | FFmpeg preset — keep at `ultrafast` on Android |
 | `HLS_READY_TIMEOUT` | `120` | Timeout for first segment (seconds) |
-| `SEGMENT_WAIT_TIMEOUT` | `30` | Wait for segment before restart (seconds) |
-| `MAX_CACHE_SIZE` | `2147483648` (2 GB) | Max cache size before auto-cleanup |
+| `SEGMENT_WAIT_TIMEOUT` | `10` | Wait for segment before restarting transcode (seconds) |
+| `MAX_CACHE_SIZE` | `524288000` (500 MB) | Max HLS cache size before auto-cleanup |
+| `SERVER_DIR` | `/tmp/media-server` | Base dir for cache and logs |
 
 ### Upload Settings
 
@@ -323,6 +334,7 @@ All settings in `config.py` can be overridden with environment variables:
 | `UPLOAD_ENABLED` | `true` | Enable/disable file uploads |
 | `MAX_UPLOAD_SIZE` | `524288000` (500 MB) | Max upload size in bytes |
 | `UPLOAD_PASSWORD` | `None` | Optional password for uploads |
+| `ALLOWED_UPLOAD_EXTENSIONS` | `None` (all) | Restrict allowed upload types |
 
 ### Delete Settings
 
@@ -330,6 +342,7 @@ All settings in `config.py` can be overridden with environment variables:
 |----------|---------|-------------|
 | `DELETE_ENABLED` | `true` | Enable/disable deletion |
 | `DELETE_PASSWORD` | `None` | Optional password for deletions |
+| `MAX_ZIP_SIZE` | `1073741824` (1 GB) | Max folder size for ZIP download; set `0` to disable |
 
 ### Example: Custom Configuration
 
@@ -378,7 +391,8 @@ media-server/
 │   ├── delete.py              # File/folder deletion API
 │   ├── folder.py              # Folder creation API
 │   ├── rename.py              # File/folder rename API
-│   └── favorites.py           # Starred files and recent tracking
+│   ├── favorites.py           # Starred files and recent tracking
+│   └── system_info.py         # System stats API (RAM/storage/uptime, Android-compatible)
 │
 ├── templates/
 │   ├── base.html              # Base template
@@ -391,12 +405,14 @@ media-server/
     │   └── drive.css          # File management styles
     └── js/
         ├── player.js          # Video player logic
+        ├── shortcuts.js       # Keyboard shortcuts
         ├── hls.min.js         # HLS.js library (download required)
         ├── upload.js          # Upload UI
         ├── delete.js          # Delete UI
         ├── menu.js            # 3-dot menus & preview
         ├── folder.js          # Folder creation UI
-        └── rename.js          # Rename UI
+        ├── rename.js          # Rename UI
+        └── utils.js           # Shared utility helpers
 ```
 
 ---
@@ -444,7 +460,7 @@ media-server/
 
 **Smart Seek Strategy:**
 - **First play**: Full transcode from position 0 OR resume position
-- **Close seeks** (<60s away): Wait for FFmpeg (max 30s timeout)
+- **Close seeks** (<60s away): Wait for FFmpeg (max 10s timeout)
 - **Far seeks** (>60s away): Restart FFmpeg at new position
 - **Cached segments**: Instant playback (no transcoding)
 - **Position saved**: Auto-resume on next view
@@ -455,7 +471,7 @@ media-server/
 - Seek ahead: transcode only the parts you watch
 - File modified (mtime changed): auto-retranscode
 - Cache location: `/tmp/media-server/cache/hls/<video-id>/`
-- **LRU Cache Management**: Auto-cleanup when cache exceeds 2GB
+- **LRU Cache Management**: Auto-cleanup when cache exceeds **500 MB** (configurable via `MAX_CACHE_SIZE`)
 - Least recently accessed videos deleted first
 - Huge storage savings (only transcodes what you watch)
 
@@ -500,6 +516,24 @@ media-server/
 ---
 
 ## 🐛 Troubleshooting
+
+### CPU Shows \"N/A\" on System Info Bar
+
+**This is expected on Android/Termux.**
+
+Android restricts access to `/proc/stat` for security reasons, so system-wide CPU percentage cannot be read by user apps. All other stats work correctly:
+
+| Stat | Android/Termux | Linux Desktop |
+|------|---------------|---------------|
+| RAM usage | ✅ Works (via `/proc/meminfo`) | ✅ Works |
+| Storage usage | ✅ Works (via `os.statvfs`) | ✅ Works |
+| Uptime | ✅ Works (server start time) | ✅ Works |
+| Active transcodes | ✅ Works | ✅ Works |
+| CPU percentage | ❌ N/A (Android restriction) | ✅ Works |
+
+> **Note:** Uptime shown is the server's own uptime (how long `app.py` has been running), not the phone's system uptime. This is intentional — `psutil.boot_time()` raises `PermissionError` on Android.
+
+Use `top` in Termux to monitor CPU manually.
 
 ### Server Won't Start
 
@@ -722,9 +756,11 @@ See [TESTING_GUIDE.md](TESTING_GUIDE.md) for comprehensive testing procedures co
 | 15 | ZIP progress notifications | ✅ Complete |
 | 16 | Seek-based transcoding | ✅ Complete |
 | 17 | Resume playback | ✅ Complete |
-| 18 | LRU cache management (2GB cap) | ✅ Complete |
-| 19 | Direct-play (H.264/AAC) | 🔄 Planned |
-| 20 | Metadata/posters | 🔄 Planned |
+| 18 | LRU cache management (500 MB cap, Android-tuned) | ✅ Complete |
+| 19 | Android-compatible system info (RAM/Storage/Uptime) | ✅ Complete |
+| 20 | Sticky system info bar below nav | ✅ Complete |
+| 21 | Direct-play (H.264/AAC) | 🔄 Planned |
+| 22 | Metadata/posters | 🔄 Planned |
 
 ---
 
@@ -777,4 +813,4 @@ Having issues? Check:
 
 **Enjoy your personal media server and cloud drive!** ☁️🎬
 
-*Last Updated: November 3, 2026*
+*Last Updated: November 25, 2026*

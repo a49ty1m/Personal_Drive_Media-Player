@@ -1,450 +1,246 @@
 {% extends "base.html" %}
-
-{% block title %}{{ title }} — ☁️ My Drive + 🎬 Media Player{% endblock %}
+{% block title %}{{ title }} — Termux Drive{% endblock %}
 
 {% block content %}
-
-  <div class="page-head">
-    <h1 class="page-title-main">{{ title }}</h1>
-    <p class="page-subtitle">Browse your media files in beautiful gallery view</p>
+<div class="px-4 lg:px-6 pt-4 pb-2 flex flex-col gap-1">
+  <!-- Breadcrumb + item count -->
+  <div class="flex items-center gap-2 flex-wrap">
+    {% if parent %}
+    <a href="{{ parent }}" class="flex items-center gap-1 text-dark-on-surface-variant hover:text-dark-on-surface transition-colors">
+      <span class="material-symbols-outlined text-lg">arrow_back</span>
+    </a>
+    <span class="text-dark-outline-variant/60">/</span>
+    {% endif %}
+    <a href="/browse/" class="text-sm text-dark-on-surface-variant hover:text-dark-on-surface transition-colors">Home</a>
+    {% if title and title != 'Home' and title != 'Downloads' %}
+    <span class="text-dark-outline-variant/60">/</span>
+    <span class="text-sm font-medium text-dark-on-surface truncate max-w-xs">{{ title }}</span>
+    {% endif %}
+    <span class="ml-auto text-xs text-dark-on-surface-variant" id="item-summary">{{ folders|length }} folders &middot; {{ files|length }} files</span>
   </div>
 
-  <div class="toolbar">
-    <div class="toolbar-left">
-      {% if parent %}
-        <a class="back-btn" href="{{ parent }}">← Back</a>
-      {% endif %}
-      <button class="filter-btn active" onclick="filterItems('all')">All</button>
-      <button class="filter-btn" onclick="filterItems('folders')">Folders</button>
-      <button class="filter-btn" onclick="filterItems('videos')">Videos</button>
-      <button class="filter-btn" onclick="filterItems('images')">Images</button>
-      <button class="filter-btn" onclick="filterItems('documents')">Documents</button>
-    </div>
-    <div class="toolbar-right">
-      {% if upload_enabled %}
-        <button class="btn btn-ghost" onclick="showCreateFolderModal()">📁 New Folder</button>
-        <button class="btn btn-primary" onclick="showUploadModal()">+ Upload Files</button>
-      {% endif %}
-    </div>
+  <!-- Filter chips -->
+  <div class="flex items-center gap-2 overflow-x-auto info-scroll pt-1 pb-1">
+    <button data-filter="all" onclick="filterItems('all', this)"
+            class="filter-chip flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors bg-dark-primary-container text-dark-on-primary-container">
+      <span class="material-symbols-outlined text-sm">apps</span> All
+    </button>
+    <button data-filter="folder" onclick="filterItems('folder', this)"
+            class="filter-chip flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors bg-dark-surface-container border border-dark-outline-variant/30 text-dark-on-surface-variant hover:text-dark-on-surface hover:bg-dark-surface-container-high">
+      <span class="material-symbols-outlined text-sm">folder</span> Folders
+    </button>
+    <button data-filter="video" onclick="filterItems('video', this)"
+            class="filter-chip flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors bg-dark-surface-container border border-dark-outline-variant/30 text-dark-on-surface-variant hover:text-dark-on-surface hover:bg-dark-surface-container-high">
+      <span class="material-symbols-outlined text-sm">play_circle</span> Videos
+    </button>
+    <button data-filter="image" onclick="filterItems('image', this)"
+            class="filter-chip flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors bg-dark-surface-container border border-dark-outline-variant/30 text-dark-on-surface-variant hover:text-dark-on-surface hover:bg-dark-surface-container-high">
+      <span class="material-symbols-outlined text-sm">image</span> Images
+    </button>
+    <button data-filter="document" onclick="filterItems('document', this)"
+            class="filter-chip flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors bg-dark-surface-container border border-dark-outline-variant/30 text-dark-on-surface-variant hover:text-dark-on-surface hover:bg-dark-surface-container-high">
+      <span class="material-symbols-outlined text-sm">description</span> Docs
+    </button>
+    <button data-filter="audio" onclick="filterItems('audio', this)"
+            class="filter-chip flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors bg-dark-surface-container border border-dark-outline-variant/30 text-dark-on-surface-variant hover:text-dark-on-surface hover:bg-dark-surface-container-high">
+      <span class="material-symbols-outlined text-sm">graphic_eq</span> Audio
+    </button>
   </div>
+</div>
 
-  <div class="gallery" id="gallery">
-    {% for folder in folders %}
-      <div class="card folder-card" data-type="folder" id="folder-{{ loop.index }}" data-path="{{ folder.relative }}" onclick="openFolder('{{ folder.url }}')">
-        <div class="card-image folder-image">📁</div>
-        <div class="card-body">
-          <h3 class="card-title">{{ folder.name }}</h3>
-          <div class="card-meta">
-            <span>Folder</span>
-          </div>
-        </div>
-        <div class="card-footer" onclick="event.stopPropagation()">
-          <span class="card-action star-toggle" data-path="{{ folder.relative }}" onclick="event.stopPropagation(); toggleStar('{{ folder.relative }}', this)" title="Star">☆</span>
-          <span class="card-action" onclick="event.stopPropagation(); downloadFolder('{{ folder.relative }}', '{{ folder.name }}')" title="Download as ZIP">📦</span>
-          <span class="card-action" onclick="event.stopPropagation(); toggleMenu(event, 'folder-{{ loop.index }}')" title="More">⋮</span>
-          <div class="dropdown-menu" id="menu-folder-{{ loop.index }}">
-            <button class="dropdown-item" onclick="closeMenu(); showRenameModal('{{ folder.relative }}', '{{ folder.name }}', 'folder')">
-              <span>✏️</span> Rename
-            </button>
-            <div class="dropdown-divider"></div>
-            <button class="dropdown-item danger" onclick="closeMenu(); confirmDelete('{{ folder.relative }}', '{{ folder.name }}', 'folder')">
-              <span>🗑️</span> Delete
-            </button>
-          </div>
-        </div>
-      </div>
-    {% endfor %}
+<div class="px-4 lg:px-6 flex flex-col gap-6 pb-6">
 
-    {% for file in files %}
-      <div class="card file-card" data-type="{{ file.extension }}" id="file-{{ loop.index }}" data-path="{{ file.relative }}" data-extension="{{ file.extension }}" data-is-video="{{ file.is_video }}" data-url="{{ file.url }}" onclick="clickFile('file-{{ loop.index }}')">
-        <div class="card-image file-image">{{ file.icon }}</div>
-        <div class="card-body">
-          <h3 class="card-title">{{ file.name }}</h3>
-          <div class="card-meta">
-            <span>{{ file.extension|upper }}</span>
-            <span>{{ file.size }}</span>
-          </div>
-        </div>
-        <div class="card-footer" onclick="event.stopPropagation()">
-          <span class="card-action star-toggle" data-path="{{ file.relative }}" onclick="event.stopPropagation(); toggleStar('{{ file.relative }}', this)" title="Star">☆</span>
-          <span class="card-action" onclick="event.stopPropagation(); downloadFile('{{ file.relative }}', '{{ file.name }}')" title="Download">💾</span>
-          <span class="card-action" onclick="event.stopPropagation(); toggleMenu(event, 'file-{{ loop.index }}')" title="More">⋮</span>
-          <div class="dropdown-menu" id="menu-file-{{ loop.index }}">
-            <button class="dropdown-item" onclick="closeMenu(); showRenameModal('{{ file.relative }}', '{{ file.name }}', 'file')">
-              <span>✏️</span> Rename
-            </button>
-            <div class="dropdown-divider"></div>
-            <button class="dropdown-item danger" onclick="closeMenu(); confirmDelete('{{ file.relative }}', '{{ file.name }}', 'file')">
-              <span>🗑️</span> Delete
-            </button>
-          </div>
-        </div>
-      </div>
-    {% endfor %}
-  </div>
+  <!-- ═══ FOLDERS SECTION ═══ -->
+  {% if folders %}
+  <section id="section-folders">
+    <h2 class="text-xs font-semibold uppercase tracking-widest text-dark-on-surface-variant mb-3">Folders</h2>
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+      {% for folder in folders %}
+      <article
+        class="gallery-card group relative bg-dark-secondary-container/20 border border-dark-outline-variant/20 rounded-xl overflow-hidden cursor-pointer hover:bg-dark-secondary-container/30 hover:border-dark-secondary/30 transition-all duration-150"
+        data-item-type="folder"
+        data-path="{{ folder.relative }}"
+        onclick="openFolder('{{ folder.url }}')"
+        id="folder-{{ loop.index }}">
 
-  {% if not folders and not files %}
-    <div class="empty-state">
-      <div class="empty-state-icon">📂</div>
-      <p class="empty-state-text">This folder is empty.</p>
-      {% if upload_enabled %}
-        <p class="empty-state-hint">Click "Upload Files" to add files or create a new folder</p>
-      {% endif %}
+        <!-- Folder icon area -->
+        <div class="relative h-24 flex items-center justify-center bg-dark-secondary-container/10">
+          <span class="material-symbols-outlined fill-icon text-dark-secondary text-5xl">folder</span>
+          <!-- Zip button -->
+          <button
+            onclick="event.stopPropagation(); downloadFolder('{{ folder.relative }}', '{{ folder.name }}')"
+            title="Download as ZIP"
+            class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 p-1.5 rounded-lg bg-dark-surface-container-high/80 backdrop-blur-sm text-dark-on-surface-variant hover:text-dark-on-surface transition-all">
+            <span class="material-symbols-outlined text-base">folder_zip</span>
+          </button>
+        </div>
+
+        <!-- Footer -->
+        <div class="px-3 py-2.5 flex items-center gap-1" onclick="event.stopPropagation()">
+          <div class="flex-1 min-w-0">
+            <p class="card-name text-xs font-medium text-dark-on-surface truncate">{{ folder.name }}</p>
+            <p class="text-xs text-dark-on-surface-variant">Folder</p>
+          </div>
+          <!-- Star -->
+          <button
+            class="star-toggle p-1 rounded-lg hover:bg-dark-surface-container text-dark-on-surface-variant hover:text-dark-primary transition-colors"
+            data-path="{{ folder.relative }}"
+            onclick="event.stopPropagation(); toggleStar('{{ folder.relative }}', this)"
+            title="Star">
+            <span class="material-symbols-outlined text-base star-icon">star</span>
+          </button>
+          <!-- More menu -->
+          <button
+            onclick="event.stopPropagation(); toggleMenu(event, 'folder-{{ loop.index }}')"
+            class="p-1 rounded-lg hover:bg-dark-surface-container text-dark-on-surface-variant hover:text-dark-on-surface transition-colors"
+            title="More">
+            <span class="material-symbols-outlined text-base">more_vert</span>
+          </button>
+          <!-- Dropdown -->
+          <div class="dropdown-menu absolute right-2 bottom-10 z-20 w-40 bg-dark-surface-container-highest rounded-lg shadow-xl border border-dark-outline-variant/30 py-1 overflow-hidden" id="menu-folder-{{ loop.index }}">
+            <button onclick="closeMenu(); showRenameModal('{{ folder.relative }}', '{{ folder.name }}', 'folder')"
+                    class="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-dark-on-surface hover:bg-dark-surface-container transition-colors">
+              <span class="material-symbols-outlined text-base">edit</span> Rename
+            </button>
+            <div class="border-t border-dark-outline-variant/20 my-0.5"></div>
+            <button onclick="closeMenu(); confirmDelete('{{ folder.relative }}', '{{ folder.name }}', 'folder')"
+                    class="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-dark-error hover:bg-dark-error-container/20 transition-colors">
+              <span class="material-symbols-outlined text-base">delete</span> Delete
+            </button>
+          </div>
+        </div>
+      </article>
+      {% endfor %}
     </div>
+  </section>
   {% endif %}
 
-  <!-- Rename Modal -->
-  <div id="renameModal" class="modal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2 id="renameModalTitle">Rename Item</h2>
-        <button class="modal-close" onclick="closeRenameModal()">&times;</button>
-      </div>
-      <div class="modal-body">
-        <div class="form-group">
-          <label for="renameInput">New Name:</label>
-          <input type="text" id="renameInput" placeholder="Enter new name..." autocomplete="off">
+  <!-- ═══ FILES SECTION ═══ -->
+  {% if files %}
+  <section id="section-files">
+    <h2 class="text-xs font-semibold uppercase tracking-widest text-dark-on-surface-variant mb-3">Files</h2>
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+      {% for file in files %}
+      <article
+        class="gallery-card group relative bg-dark-surface-container border border-dark-outline-variant/20 rounded-xl overflow-hidden cursor-pointer hover:bg-dark-surface-container-high hover:border-dark-outline-variant/40 transition-all duration-150"
+        data-item-type="{{ file.extension }}"
+        data-path="{{ file.relative }}"
+        data-extension="{{ file.extension }}"
+        data-is-video="{{ file.is_video }}"
+        data-url="{{ file.url }}"
+        onclick="clickFile('file-{{ loop.index }}')"
+        id="file-{{ loop.index }}">
+
+        <!-- Thumbnail / icon area -->
+        <div class="relative h-28 flex items-center justify-center overflow-hidden
+          {% if file.is_video %}bg-black{% elif file.extension in ['jpg','jpeg','png','gif','webp','bmp'] %}bg-dark-surface-container-lowest{% else %}bg-dark-surface-container-high/40{% endif %}">
+
+          {% if file.is_video %}
+            <!-- Video placeholder -->
+            <div class="absolute inset-0 flex items-center justify-center">
+              <div class="w-10 h-10 rounded-full bg-dark-primary-container/30 border border-dark-primary/40 flex items-center justify-center backdrop-blur-sm">
+                <span class="material-symbols-outlined fill-icon text-dark-primary text-2xl">play_circle</span>
+              </div>
+            </div>
+            <!-- Extension badge -->
+            <span class="absolute bottom-2 left-2 px-1.5 py-0.5 bg-black/70 rounded text-xs font-mono text-dark-primary uppercase">{{ file.extension }}</span>
+
+          {% elif file.extension in ['jpg', 'jpeg', 'png', 'gif', 'webp'] %}
+            <img src="{{ file.url }}" alt="{{ file.name }}"
+                 class="w-full h-full object-cover"
+                 onerror="this.parentElement.innerHTML='<span class=\'material-symbols-outlined text-dark-on-surface-variant text-4xl\'>image</span>'">
+
+          {% elif file.extension in ['mp3', 'flac', 'wav', 'ogg', 'm4a', 'aac', 'opus'] %}
+            <span class="material-symbols-outlined text-dark-tertiary text-5xl">graphic_eq</span>
+
+          {% elif file.extension == 'pdf' %}
+            <span class="material-symbols-outlined text-dark-error text-5xl">picture_as_pdf</span>
+
+          {% elif file.extension in ['zip', 'rar', '7z', 'tar', 'gz', 'bz2'] %}
+            <span class="material-symbols-outlined text-dark-secondary text-5xl">inventory_2</span>
+
+          {% elif file.extension in ['py', 'js', 'ts', 'html', 'css', 'json', 'xml', 'yaml', 'yml', 'sh', 'bash', 'conf', 'ini', 'cfg'] %}
+            <span class="material-symbols-outlined text-dark-tertiary text-5xl">code</span>
+
+          {% elif file.extension in ['md', 'txt', 'doc', 'docx', 'odt', 'rtf', 'csv', 'log'] %}
+            <span class="material-symbols-outlined text-dark-on-surface-variant text-5xl">description</span>
+
+          {% elif file.extension in ['srt', 'vtt', 'ass', 'ssa'] %}
+            <span class="material-symbols-outlined text-dark-secondary text-5xl">subtitles</span>
+
+          {% elif file.extension in ['apk', 'ipa'] %}
+            <span class="material-symbols-outlined text-dark-tertiary text-5xl">android</span>
+
+          {% else %}
+            <span class="material-symbols-outlined text-dark-on-surface-variant text-5xl">{{ file.icon }}</span>
+          {% endif %}
         </div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn-cancel" onclick="closeRenameModal()">Cancel</button>
-        <button class="btn-primary" onclick="performRename()">Rename</button>
-      </div>
-    </div>
-  </div>
 
-  <!-- Create Folder Modal -->
-  <div id="folderModal" class="modal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2>📁 Create New Folder</h2>
-        <button class="modal-close" onclick="closeFolderModal()">&times;</button>
-      </div>
-      <div class="modal-body">
-        <div class="form-group">
-          <label for="folderNameInput">Folder Name:</label>
-          <input type="text" id="folderNameInput" placeholder="Enter folder name..." autocomplete="off">
+        <!-- Footer -->
+        <div class="px-3 py-2.5 flex items-center gap-1" onclick="event.stopPropagation()">
+          <div class="flex-1 min-w-0">
+            <p class="card-name text-xs font-medium text-dark-on-surface truncate">{{ file.name }}</p>
+            <p class="text-xs text-dark-on-surface-variant">{{ file.extension|upper }} &middot; {{ file.size }}</p>
+          </div>
+          <!-- Star -->
+          <button
+            class="star-toggle p-1 rounded-lg hover:bg-dark-surface-container-high text-dark-on-surface-variant hover:text-dark-primary transition-colors"
+            data-path="{{ file.relative }}"
+            onclick="event.stopPropagation(); toggleStar('{{ file.relative }}', this)"
+            title="Star">
+            <span class="material-symbols-outlined text-base star-icon">star</span>
+          </button>
+          <!-- More menu -->
+          <button
+            onclick="event.stopPropagation(); toggleMenu(event, 'file-{{ loop.index }}')"
+            class="p-1 rounded-lg hover:bg-dark-surface-container-high text-dark-on-surface-variant hover:text-dark-on-surface transition-colors"
+            title="More">
+            <span class="material-symbols-outlined text-base">more_vert</span>
+          </button>
+          <!-- Dropdown -->
+          <div class="dropdown-menu absolute right-2 bottom-10 z-20 w-44 bg-dark-surface-container-highest rounded-lg shadow-xl border border-dark-outline-variant/30 py-1 overflow-hidden" id="menu-file-{{ loop.index }}">
+            <button onclick="closeMenu(); downloadFile('{{ file.relative }}', '{{ file.name }}')"
+                    class="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-dark-on-surface hover:bg-dark-surface-container transition-colors">
+              <span class="material-symbols-outlined text-base">download</span> Download
+            </button>
+            <button onclick="closeMenu(); showRenameModal('{{ file.relative }}', '{{ file.name }}', 'file')"
+                    class="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-dark-on-surface hover:bg-dark-surface-container transition-colors">
+              <span class="material-symbols-outlined text-base">edit</span> Rename
+            </button>
+            <div class="border-t border-dark-outline-variant/20 my-0.5"></div>
+            <button onclick="closeMenu(); confirmDelete('{{ file.relative }}', '{{ file.name }}', 'file')"
+                    class="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-dark-error hover:bg-dark-error-container/20 transition-colors">
+              <span class="material-symbols-outlined text-base">delete</span> Delete
+            </button>
+          </div>
         </div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn-cancel" onclick="closeFolderModal()">Cancel</button>
-        <button class="btn-primary" onclick="createFolder()">Create</button>
-      </div>
+      </article>
+      {% endfor %}
     </div>
-  </div>
+  </section>
+  {% endif %}
 
-  <!-- Delete Confirmation Modal -->
-  <div id="deleteModal" class="modal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2 id="deleteModalTitle">🗑️ Confirm Delete</h2>
-        <button class="modal-close" onclick="closeDeleteModal()">&times;</button>
-      </div>
-      <div class="modal-body">
-        <p id="deleteModalMessage" style="color: #e0e0e0; line-height: 1.6;"></p>
-        <p style="color: #ef4444; margin-top: 15px; font-weight: 500;">⚠️ This action cannot be undone!</p>
-      </div>
-      <div class="modal-footer">
-        <button class="btn-cancel" onclick="closeDeleteModal()">Cancel</button>
-        <button class="btn-danger" onclick="performDelete()" style="background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);">Delete</button>
-      </div>
+  <!-- Empty state -->
+  {% if not folders and not files %}
+  <div class="flex flex-col items-center justify-center py-20 gap-4">
+    <div class="w-16 h-16 rounded-2xl bg-dark-surface-container flex items-center justify-center">
+      <span class="material-symbols-outlined text-dark-on-surface-variant text-4xl">folder_open</span>
     </div>
+    <p class="text-dark-on-surface-variant font-medium">This folder is empty</p>
+    {% if upload_enabled %}
+    <button onclick="showUploadModal()"
+            class="flex items-center gap-2 px-4 py-2 rounded-lg bg-dark-primary-container text-dark-on-primary-container text-sm font-medium hover:opacity-90 transition-opacity">
+      <span class="material-symbols-outlined text-lg">upload</span> Upload Files
+    </button>
+    {% endif %}
   </div>
+  {% endif %}
 
-  <!-- ZIP Progress Notification -->
-  <div id="zipNotification" class="zip-notification">
-    <div class="zip-notification-content">
-      <div class="zip-spinner"></div>
-      <div class="zip-notification-text">
-        <div class="zip-notification-title">Creating ZIP archive...</div>
-        <div class="zip-notification-subtitle" id="zipFileName"></div>
-      </div>
-    </div>
-  </div>
+</div><!-- /content columns -->
 
-  <script>
-    // Store current path for upload
-    document.body.dataset.currentPath = "{{ path }}";
-
-    // Debug: Log all cards on page load
-    document.addEventListener('DOMContentLoaded', function() {
-      console.log('=== File Cards Debug ===');
-      const cards = document.querySelectorAll('.card');
-      cards.forEach((card, index) => {
-        const isFolder = card.classList.contains('folder-card');
-        const fileType = card.dataset.type;
-        const title = card.querySelector('.card-title').textContent;
-        console.log(`Card ${index}: "${title}" | Type: "${fileType}" | Folder: ${isFolder}`);
-      });
-    });
-
-    // Filter functionality
-    function filterItems(type) {
-      console.log('=== Filter Applied: ' + type + ' ===');
-      const cards = document.querySelectorAll('.card');
-      const filterBtns = document.querySelectorAll('.filter-btn');
-      
-      // Update active button
-      filterBtns.forEach(btn => btn.classList.remove('active'));
-      event.target.classList.add('active');
-      
-      let shownCount = 0;
-      let hiddenCount = 0;
-      
-      cards.forEach(card => {
-        let fileType = (card.dataset.type || '').toLowerCase().trim();
-        // Remove leading dot if present (e.g., ".mp4" -> "mp4")
-        if (fileType.startsWith('.')) {
-          fileType = fileType.substring(1);
-        }
-        
-        const isFolder = card.classList.contains('folder-card');
-        const title = card.querySelector('.card-title').textContent;
-        
-        let shouldShow = false;
-        
-        if (type === 'all') {
-          shouldShow = true;
-        } else if (type === 'folders') {
-          shouldShow = isFolder;
-        } else if (type === 'videos') {
-          const videoExts = ['mp4', 'mkv', 'avi', 'mov', 'webm', 'flv', 'm4v', 'wmv', 'mpeg', 'mpg', '3gp', 'ts'];
-          shouldShow = !isFolder && videoExts.includes(fileType);
-          if (!isFolder) {
-            console.log(`  "${title}": ext="${fileType}", isVideo=${videoExts.includes(fileType)}`);
-          }
-        } else if (type === 'images') {
-          const imageExts = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg', 'ico', 'tiff', 'tif'];
-          shouldShow = !isFolder && imageExts.includes(fileType);
-          if (!isFolder) {
-            console.log(`  "${title}": ext="${fileType}", isImage=${imageExts.includes(fileType)}`);
-          }
-        } else if (type === 'documents') {
-          const docExts = ['pdf', 'doc', 'docx', 'txt', 'rtf', 'odt', 'xls', 'xlsx', 'ppt', 'pptx', 'csv', 'sh', 'md', 'json', 'xml', 'yml', 'yaml', 'log', 'py', 'js', 'html', 'css', 'conf', 'ini', 'cfg'];
-          shouldShow = !isFolder && docExts.includes(fileType);
-          if (!isFolder) {
-            console.log(`  "${title}": ext="${fileType}", isDoc=${docExts.includes(fileType)}`);
-          }
-        }
-        
-        card.style.display = shouldShow ? 'block' : 'none';
-        
-        if (shouldShow) shownCount++;
-        else hiddenCount++;
-      });
-      
-      console.log(`Result: ${shownCount} shown, ${hiddenCount} hidden`);
-    }
-
-    // Search functionality
-    const searchInput = document.getElementById('searchInput');
-    if (searchInput) {
-      searchInput.addEventListener('input', function(e) {
-        const searchTerm = e.target.value.toLowerCase();
-        const cards = document.querySelectorAll('.card');
-        
-        cards.forEach(card => {
-          const title = card.querySelector('.card-title').textContent.toLowerCase();
-          if (title.includes(searchTerm)) {
-            card.style.display = 'block';
-          } else {
-            card.style.display = 'none';
-          }
-        });
-      });
-    }
-    
-    // Star/unstar functionality
-    async function toggleStar(filePath, element) {
-      try {
-        const response = await fetch('/api/star/' + encodeURIComponent(filePath), {
-          method: 'POST'
-        });
-        const data = await response.json();
-        
-        if (data.success) {
-          // Update icon
-          element.textContent = data.is_starred ? '⭐' : '☆';
-          element.title = data.is_starred ? 'Unstar' : 'Star';
-          
-          // Show brief notification
-          console.log(data.action === 'added' ? 'Added to starred' : 'Removed from starred');
-        }
-      } catch (error) {
-        console.error('Failed to toggle star:', error);
-      }
-    }
-    
-    // Download folder as ZIP
-    async function downloadFolder(folderPath, folderName) {
-      // Show ZIP notification
-      const notification = document.getElementById('zipNotification');
-      const fileNameEl = document.getElementById('zipFileName');
-      const titleEl = notification.querySelector('.zip-notification-title');
-      
-      fileNameEl.textContent = folderName + '.zip';
-      titleEl.textContent = 'Creating ZIP archive...';
-      notification.classList.add('show');
-      
-      const downloadUrl = '/download-folder/' + encodeURIComponent(folderPath);
-      
-      try {
-        // Fetch the ZIP file
-        const response = await fetch(downloadUrl);
-        
-        if (!response.ok) {
-          // Check if it's a 413 (Payload Too Large) error
-          if (response.status === 413) {
-            const data = await response.json();
-            throw new Error(`Folder too large (${data.size_mb} MB). Maximum: ${data.limit_mb} MB`);
-          }
-          throw new Error('Failed to create ZIP');
-        }
-        
-        // Update notification to show download is ready
-        titleEl.textContent = 'Downloading...';
-        
-        // Get the blob
-        const blob = await response.blob();
-        
-        // Create download link
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = folderName + '.zip';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        window.URL.revokeObjectURL(url);
-        
-        // Show success
-        titleEl.textContent = '✓ Download started';
-        titleEl.style.color = '#10b981';
-        
-        // Hide notification after 2 seconds
-        setTimeout(() => {
-          notification.classList.remove('show');
-          titleEl.textContent = 'Creating ZIP archive...';
-          titleEl.style.color = '';
-        }, 2000);
-        
-      } catch (error) {
-        titleEl.textContent = '✗ ' + error.message;
-        titleEl.style.color = '#ef4444';
-        
-        // Hide error notification after 5 seconds (longer for error messages)
-        setTimeout(() => {
-          notification.classList.remove('show');
-          titleEl.textContent = 'Creating ZIP archive...';
-          titleEl.style.color = '';
-        }, 5000);
-      }
-    }
-    
-    // Delete confirmation modal
-    let pendingDelete = null;
-    
-    function confirmDelete(path, name, type) {
-      console.log('confirmDelete called:', { path, name, type });
-      pendingDelete = { path, name, type };
-      
-      const modal = document.getElementById('deleteModal');
-      const message = document.getElementById('deleteModalMessage');
-      
-      if (!modal || !message) {
-        console.error('Delete modal elements not found');
-        alert('Delete modal not found. Please refresh the page.');
-        return;
-      }
-      
-      if (type === 'folder') {
-        message.innerHTML = `Are you sure you want to delete the folder <strong>"${name}"</strong> and all its contents?`;
-      } else {
-        message.innerHTML = `Are you sure you want to delete <strong>"${name}"</strong>?`;
-      }
-      
-      modal.classList.add('show');
-      console.log('Delete modal opened');
-    }
-    
-    function closeDeleteModal() {
-      const modal = document.getElementById('deleteModal');
-      if (modal) {
-        modal.classList.remove('show');
-      }
-      pendingDelete = null;
-      console.log('Delete modal closed');
-    }
-    
-    function performDelete() {
-      console.log('performDelete called, pendingDelete:', pendingDelete);
-      
-      if (!pendingDelete) {
-        console.warn('No pending delete');
-        return;
-      }
-      
-      const { path, name, type } = pendingDelete;
-      closeDeleteModal();
-      
-      // Check if delete functions exist
-      if (typeof deleteFolder !== 'function' || typeof deleteFile !== 'function') {
-        console.error('Delete functions not found. Make sure delete.js is loaded.');
-        alert('Delete functionality not loaded. Please refresh the page.');
-        return;
-      }
-      
-      // Call the actual delete function from delete.js
-      if (type === 'folder') {
-        console.log('Calling deleteFolder');
-        deleteFolder(path, name);
-      } else {
-        console.log('Calling deleteFile');
-        deleteFile(path, name);
-      }
-    }
-    
-    // Close delete modal on Escape
-    document.addEventListener('keydown', function(e) {
-      if (e.key === 'Escape') {
-        const deleteModal = document.getElementById('deleteModal');
-        if (deleteModal && deleteModal.classList.contains('show')) {
-          closeDeleteModal();
-        }
-      }
-    });
-    
-    // Debug: Check if functions are loaded
-    document.addEventListener('DOMContentLoaded', function() {
-      console.log('=== Function Availability Check ===');
-      console.log('showUploadModal:', typeof showUploadModal);
-      console.log('deleteFile:', typeof deleteFile);
-      console.log('deleteFolder:', typeof deleteFolder);
-      console.log('confirmDelete:', typeof confirmDelete);
-      console.log('performDelete:', typeof performDelete);
-      console.log('===============================');
-    });
-    
-    // Load star status for all files on page load
-    document.addEventListener('DOMContentLoaded', async function() {
-      const starToggles = document.querySelectorAll('.star-toggle');
-      
-      for (const toggle of starToggles) {
-        const filePath = toggle.dataset.path;
-        
-        try {
-          const response = await fetch('/api/is_starred/' + encodeURIComponent(filePath));
-          const data = await response.json();
-          
-          if (data.is_starred) {
-            toggle.textContent = '⭐';
-            toggle.title = 'Unstar';
-          }
-        } catch (error) {
-          console.error('Failed to check star status:', error);
-        }
-      }
-    });
-  </script>
-
+<script>
+  // Pass Jinja2 path to browse.js
+  document.body.dataset.currentPath = "{{ path }}";
+</script>
+<script src="/static/js/browse.js?v=15"></script>
 {% endblock %}

@@ -1,147 +1,472 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{% block title %}☁️ My Drive + 🎬 Media Player{% endblock %}</title>
-  <link rel="stylesheet" href="/static/css/style.css?v=13">
-  <link rel="stylesheet" href="/static/css/drive.css?v=13">
+  <title>{% block title %}Termux Drive{% endblock %}</title>
+
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <script id="tailwind-config">
+  /** @type {import('tailwindcss').Config} */
+  globalThis.tailwind = globalThis.tailwind || {};
+  globalThis.tailwind.config = {
+    darkMode: 'class',
+    theme: {
+      extend: {
+        colors: {
+          'dark-primary': '#FFB2B7',
+          'dark-on-primary': '#67001B',
+          'dark-primary-container': '#FF516A',
+          'dark-on-primary-container': '#45000F',
+          'dark-secondary': '#BDC2FF',
+          'dark-on-secondary': '#131E8C',
+          'dark-secondary-container': '#2F3AA3',
+          'dark-on-secondary-container': '#A8AFFF',
+          'dark-tertiary': '#64DCA0',
+          'dark-on-tertiary': '#003822',
+          'dark-tertiary-container': '#1FA46D',
+          'dark-on-tertiary-container': '#002414',
+          'dark-error': '#FFB4AB',
+          'dark-on-error': '#690005',
+          'dark-error-container': '#93000A',
+          'dark-on-error-container': '#FFDAD6',
+          'dark-background': '#171217',
+          'dark-on-background': '#EBDFE7',
+          'dark-surface': '#171217',
+          'dark-surface-dim': '#171217',
+          'dark-surface-bright': '#3E373D',
+          'dark-surface-container-lowest': '#110D12',
+          'dark-surface-container-low': '#1F1A1F',
+          'dark-surface-container': '#231E23',
+          'dark-surface-container-high': '#2E282E',
+          'dark-surface-container-highest': '#393339',
+          'dark-on-surface': '#EBDFE7',
+          'dark-surface-variant': '#5B4041',
+          'dark-on-surface-variant': '#E3BDBF',
+          'dark-outline': '#AA888A',
+          'dark-outline-variant': '#5B4041',
+          'dark-inverse-surface': '#EBDFE7',
+          'dark-inverse-on-surface': '#352E34',
+          'dark-inverse-primary': '#BC0B3B',
+          'light-primary': '#B90538',
+          'light-secondary': '#4953BC',
+          'light-tertiary': '#006A43',
+          'light-background': '#FFF7FA',
+          'light-surface': '#FFF7FA',
+          'light-on-surface': '#1F1A1F',
+          'light-surface-container': '#F6EBF2',
+          'light-surface-container-low': '#FCF0F8',
+          'light-on-surface-variant': '#5B4041',
+          'light-outline-variant': '#E3BDBF',
+        },
+        borderRadius: {
+          'sm': '6px',
+          'DEFAULT': '10px',
+          'md': '12px',
+          'lg': '16px',
+          'xl': '20px',
+          'full': '9999px',
+        },
+        spacing: {
+          'gutter-xs': '4px',
+          'gutter-sm': '8px',
+          'gutter-md': '12px',
+          'gutter-lg': '16px',
+          'gutter-xl': '24px',
+          'section': '32px',
+          'page-margin': '24px',
+        },
+        fontFamily: {
+          'display': ['"Space Grotesk"', 'sans-serif'],
+          'headline': ['"Space Grotesk"', 'sans-serif'],
+          'title': ['"Geist"', 'sans-serif'],
+          'body': ['"Geist"', 'sans-serif'],
+          'label': ['"Geist"', 'sans-serif'],
+          'mono': ['"Space Mono"', 'monospace'],
+        },
+        fontSize: {
+          'display-lg': ['40px', { lineHeight: '46px', letterSpacing: '-0.5px', fontWeight: '700' }],
+          'headline-lg': ['28px', { lineHeight: '34px', letterSpacing: '-0.25px', fontWeight: '600' }],
+          'headline-md': ['22px', { lineHeight: '28px', letterSpacing: '-0.15px', fontWeight: '600' }],
+          'title-lg': ['18px', { lineHeight: '24px', letterSpacing: '-0.1px', fontWeight: '600' }],
+          'title-md': ['16px', { lineHeight: '22px', letterSpacing: '0px', fontWeight: '500' }],
+          'body-lg': ['16px', { lineHeight: '24px', letterSpacing: '0.15px', fontWeight: '400' }],
+          'body-md': ['14px', { lineHeight: '20px', letterSpacing: '0.25px', fontWeight: '400' }],
+          'label-lg': ['14px', { lineHeight: '20px', letterSpacing: '0.1px', fontWeight: '500' }],
+          'label-md': ['12px', { lineHeight: '16px', letterSpacing: '0.5px', fontWeight: '500' }],
+          'label-sm': ['11px', { lineHeight: '16px', letterSpacing: '0.5px', fontWeight: '500' }],
+        },
+      }
+    }
+  };
+  </script>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Geist:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=block" rel="stylesheet">
+
+  <!-- Legacy CSS (player.html still needs it) -->
+  <link rel="stylesheet" href="/static/css/style.css?v=15">
+  <link rel="stylesheet" href="/static/css/drive.css?v=15">
+
+  <style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      line-height: 1;
+      display: inline-flex;
+      align-items: center;
+    }
+    .fill-icon { font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+
+    /* Smooth scrollbar for sidebar */
+    .sidebar-scroll::-webkit-scrollbar { width: 4px; }
+    .sidebar-scroll::-webkit-scrollbar-track { background: transparent; }
+    .sidebar-scroll::-webkit-scrollbar-thumb { background: rgba(227,189,191,0.2); border-radius: 2px; }
+
+    /* System info bar scrollable on mobile */
+    .info-scroll { scrollbar-width: none; }
+    .info-scroll::-webkit-scrollbar { display: none; }
+
+    /* Modal backdrop */
+    .modal-backdrop {
+      display: none;
+      position: fixed; inset: 0; z-index: 50;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(4px);
+      align-items: center; justify-content: center;
+    }
+    .modal-backdrop.show { display: flex; }
+
+    /* ZIP notification */
+    .zip-notification {
+      position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 60;
+      background: #2E282E; border: 1px solid rgba(170,136,138,0.3);
+      border-radius: 12px; padding: 1rem 1.25rem;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+      display: flex; align-items: center; gap: 0.75rem;
+      min-width: 240px;
+      opacity: 0; pointer-events: none;
+      transform: translateY(12px);
+      transition: opacity 220ms cubic-bezier(0.2,0,0,1), transform 220ms cubic-bezier(0.2,0,0,1);
+    }
+    .zip-notification.show {
+      opacity: 1; pointer-events: auto;
+      transform: translateY(0);
+    }
+    .zip-spinner {
+      width: 18px; height: 18px; border: 2px solid rgba(255,178,183,0.2);
+      border-top-color: #FFB2B7; border-radius: 50%;
+      animation: spin 0.8s linear infinite; flex-shrink: 0;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Active nav item */
+    .nav-active {
+      background: rgba(189,194,255,0.12);
+      color: #BDC2FF;
+    }
+    .nav-active .material-symbols-outlined { font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+  </style>
+
   {% block head %}{% endblock %}
 </head>
-<body>
+<body class="bg-dark-surface text-dark-on-surface antialiased font-body">
 
-  <nav class="top-nav">
-    <div class="nav-brand">
-      <div class="nav-brand-icon">🎬</div>
-      <span>My Drive Media</span>
-    </div>
-    <div class="nav-menu">
-      <a href="/browse/" class="nav-link {% if request.path.startswith('/browse') and not request.path.startswith('/player') %}active{% endif %}">🏠 Home</a>
-      <a href="/starred/" class="nav-link {% if request.path.startswith('/starred') %}active{% endif %}">⭐ Starred</a>
-      <a href="/recent/" class="nav-link {% if request.path.startswith('/recent') %}active{% endif %}">🕒 Recent</a>
-    </div>
-    <div class="nav-actions">
-      <input type="text" class="search-input" placeholder="Search files..." id="searchInput">
-    </div>
-  </nav>
+<div class="min-h-screen flex bg-dark-surface">
 
-  <!-- System Info Bar -->
-  <div class="system-info-bar" id="systemInfoBar">
-    <div class="system-stat">
-      <span class="stat-icon">🧠</span>
-      <span class="stat-label">RAM:</span>
-      <span class="stat-value" id="ramUsage">--</span>
+  <!-- ═══════════════════════════════════════════════════
+       DESKTOP SIDEBAR  (hidden on mobile, visible lg+)
+  ═══════════════════════════════════════════════════ -->
+  <aside class="hidden lg:flex w-60 shrink-0 min-h-screen bg-dark-surface-container-low border-r border-dark-outline-variant/30 flex-col">
+
+    <!-- Brand -->
+    <div class="px-5 py-5 flex items-center gap-3 border-b border-dark-outline-variant/20">
+      <div class="w-9 h-9 rounded-lg bg-dark-primary-container/20 border border-dark-primary/20 flex items-center justify-center shrink-0">
+        <span class="material-symbols-outlined text-dark-primary text-xl">hard_drive</span>
+      </div>
+      <div class="min-w-0">
+        <p class="font-headline font-semibold text-sm text-dark-on-surface leading-tight truncate">Termux Drive</p>
+        <p class="text-xs text-dark-on-surface-variant leading-tight">Media Server</p>
+      </div>
     </div>
-    <div class="system-stat">
-      <span class="stat-icon">💾</span>
-      <span class="stat-label">Storage:</span>
-      <span class="stat-value" id="storageUsage">--</span>
+
+    <!-- Nav items -->
+    <nav class="flex-1 px-3 py-4 flex flex-col gap-1 sidebar-scroll overflow-y-auto">
+      <a href="/browse/"
+         class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
+                {% if request.path.startswith('/browse') and not request.path.startswith('/player') %}nav-active{% else %}text-dark-on-surface-variant hover:bg-dark-surface-container hover:text-dark-on-surface{% endif %}">
+        <span class="material-symbols-outlined text-xl">home</span>
+        <span>Home</span>
+      </a>
+      <a href="/starred/"
+         class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
+                {% if request.path.startswith('/starred') %}nav-active{% else %}text-dark-on-surface-variant hover:bg-dark-surface-container hover:text-dark-on-surface{% endif %}">
+        <span class="material-symbols-outlined text-xl">star</span>
+        <span>Starred</span>
+      </a>
+      <a href="/recent/"
+         class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
+                {% if request.path.startswith('/recent') %}nav-active{% else %}text-dark-on-surface-variant hover:bg-dark-surface-container hover:text-dark-on-surface{% endif %}">
+        <span class="material-symbols-outlined text-xl">schedule</span>
+        <span>Recent</span>
+      </a>
+    </nav>
+
+    <!-- Cache/Storage status card -->
+    <div class="px-3 pb-4">
+      <div class="bg-dark-surface-container rounded-lg p-3 border border-dark-outline-variant/20">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-xs font-medium text-dark-on-surface-variant">Storage</span>
+          <span class="text-xs font-mono text-dark-on-surface" id="cachePercent">--</span>
+        </div>
+        <div class="w-full h-1.5 bg-dark-surface-container-high rounded-full overflow-hidden mb-2">
+          <div class="h-full bg-dark-primary rounded-full transition-all duration-500" id="cacheBar" style="width:0%"></div>
+        </div>
+        <p class="text-xs text-dark-on-surface-variant" id="cacheUsed">Loading…</p>
+      </div>
     </div>
-    <div class="system-stat">
-      <span class="stat-icon">📹</span>
-      <span class="stat-label">Active:</span>
-      <span class="stat-value" id="activeTranscodes">0</span>
+  </aside>
+
+  <!-- ═══════════════════════════════════════════════════
+       MAIN WORKSPACE
+  ═══════════════════════════════════════════════════ -->
+  <div class="flex-1 min-w-0 flex flex-col">
+
+    <!-- ─── DESKTOP STICKY HEADER (lg+) ─── -->
+    <header class="hidden lg:block sticky top-0 z-20 bg-dark-surface-container-low/95 border-b border-dark-outline-variant/30 backdrop-blur-sm">
+      <div class="px-6 py-3 flex items-center gap-3">
+        <!-- Search -->
+        <div class="relative flex-1 max-w-sm">
+          <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-dark-on-surface-variant text-lg pointer-events-none">search</span>
+          <input type="text" id="searchInput"
+                 placeholder="Search files…"
+                 class="w-full bg-dark-surface-container border border-dark-outline-variant/40 rounded-lg pl-9 pr-3 py-2 text-sm text-dark-on-surface placeholder-dark-on-surface-variant focus:outline-none focus:border-dark-primary/60 transition-colors">
+        </div>
+        <div class="flex-1"></div>
+        <!-- Action buttons — shown only on browse pages when upload is enabled -->
+        <div id="headerActions" class="flex items-center gap-2">
+          {% if upload_enabled %}
+          <button onclick="showCreateFolderModal()"
+                  class="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-dark-surface-container border border-dark-outline-variant/30 text-sm font-medium text-dark-on-surface hover:bg-dark-surface-container-high transition-colors">
+            <span class="material-symbols-outlined text-lg">create_new_folder</span>
+            New Folder
+          </button>
+          <button onclick="showUploadModal()"
+                  class="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-dark-primary-container text-dark-on-primary-container text-sm font-medium hover:opacity-90 transition-opacity">
+            <span class="material-symbols-outlined text-lg">upload</span>
+            Upload
+          </button>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- System info bar (desktop) -->
+      <div class="px-6 py-2 border-t border-dark-outline-variant/20 flex items-center gap-6 bg-dark-surface-container-lowest/50">
+        <div class="flex items-center gap-1.5">
+          <span class="material-symbols-outlined text-dark-tertiary text-base">memory</span>
+          <span class="text-xs text-dark-on-surface-variant">RAM</span>
+          <span class="text-xs font-mono text-dark-on-surface" id="ramStat">--</span>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <span class="material-symbols-outlined text-dark-secondary text-base">storage</span>
+          <span class="text-xs text-dark-on-surface-variant">Storage</span>
+          <span class="text-xs font-mono text-dark-on-surface" id="storageStat">--</span>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <span class="material-symbols-outlined text-dark-primary text-base">video_settings</span>
+          <span class="text-xs text-dark-on-surface-variant">Transcode</span>
+          <span class="text-xs font-mono text-dark-on-surface" id="transcodesStat">0</span>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <span class="material-symbols-outlined text-dark-on-surface-variant text-base">timer</span>
+          <span class="text-xs text-dark-on-surface-variant">Uptime</span>
+          <span class="text-xs font-mono text-dark-on-surface" id="uptimeStat">--</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- ─── MOBILE STICKY HEADER (hidden on lg+) ─── -->
+    <header class="lg:hidden sticky top-0 z-20 bg-dark-surface-container-low border-b border-dark-outline-variant/30">
+      <!-- Top row: brand + icons -->
+      <div class="px-4 py-3 flex items-center gap-3">
+        <div class="w-8 h-8 rounded-md bg-dark-primary-container/20 border border-dark-primary/20 flex items-center justify-center shrink-0">
+          <span class="material-symbols-outlined text-dark-primary text-base">hard_drive</span>
+        </div>
+        <span class="font-headline font-semibold text-sm text-dark-on-surface flex-1">Termux Drive</span>
+        {% if upload_enabled %}
+        <button onclick="showCreateFolderModal()" class="p-1.5 rounded-lg hover:bg-dark-surface-container text-dark-on-surface-variant hover:text-dark-on-surface transition-colors">
+          <span class="material-symbols-outlined text-xl">create_new_folder</span>
+        </button>
+        <button onclick="showUploadModal()" class="p-1.5 rounded-lg bg-dark-primary-container/20 border border-dark-primary/30 text-dark-primary hover:bg-dark-primary-container/30 transition-colors">
+          <span class="material-symbols-outlined text-xl">upload</span>
+        </button>
+        {% endif %}
+        <button onclick="toggleMobileSearch()" class="p-1.5 rounded-lg hover:bg-dark-surface-container text-dark-on-surface-variant hover:text-dark-on-surface transition-colors">
+          <span class="material-symbols-outlined text-xl">search</span>
+        </button>
+      </div>
+
+      <!-- Mobile search bar (hidden by default) -->
+      <div id="mobileSearchBar" class="hidden px-4 pb-2">
+        <div class="relative">
+          <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-dark-on-surface-variant text-lg pointer-events-none">search</span>
+          <input type="text" id="searchInputMobile"
+                 placeholder="Search files…"
+                 class="w-full bg-dark-surface-container border border-dark-outline-variant/40 rounded-lg pl-9 pr-3 py-2 text-sm text-dark-on-surface placeholder-dark-on-surface-variant focus:outline-none focus:border-dark-primary/60 transition-colors">
+        </div>
+      </div>
+
+      <!-- Mobile system info bar (scrollable) -->
+      <div class="px-4 py-2 border-t border-dark-outline-variant/20 flex items-center gap-4 overflow-x-auto info-scroll bg-dark-surface-container-lowest/50">
+        <div class="flex items-center gap-1 shrink-0">
+          <span class="material-symbols-outlined text-dark-tertiary text-sm">memory</span>
+          <span class="text-xs font-mono text-dark-on-surface whitespace-nowrap" id="ramStatMobile">--</span>
+        </div>
+        <div class="w-px h-3 bg-dark-outline-variant/40 shrink-0"></div>
+        <div class="flex items-center gap-1 shrink-0">
+          <span class="material-symbols-outlined text-dark-secondary text-sm">storage</span>
+          <span class="text-xs font-mono text-dark-on-surface whitespace-nowrap" id="storageStatMobile">--</span>
+        </div>
+        <div class="w-px h-3 bg-dark-outline-variant/40 shrink-0"></div>
+        <div class="flex items-center gap-1 shrink-0">
+          <span class="material-symbols-outlined text-dark-primary text-sm">video_settings</span>
+          <span class="text-xs font-mono text-dark-on-surface whitespace-nowrap" id="transcodesStatMobile">0 jobs</span>
+        </div>
+        <div class="w-px h-3 bg-dark-outline-variant/40 shrink-0"></div>
+        <div class="flex items-center gap-1 shrink-0">
+          <span class="material-symbols-outlined text-dark-on-surface-variant text-sm">timer</span>
+          <span class="text-xs font-mono text-dark-on-surface whitespace-nowrap" id="uptimeStatMobile">--</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Page content -->
+    <main class="flex-1 pb-24 lg:pb-0">
+      {% block content %}{% endblock %}
+    </main>
+
+  </div><!-- /MAIN WORKSPACE -->
+</div><!-- /min-h-screen flex -->
+
+<!-- ═══════════════════════════════════════════════════
+     MOBILE BOTTOM NAV  (hidden lg+)
+═══════════════════════════════════════════════════ -->
+<nav class="lg:hidden fixed bottom-0 inset-x-0 z-30 bg-dark-surface-container-low border-t border-dark-outline-variant/30 flex">
+  <a href="/browse/"
+     class="flex-1 flex flex-col items-center justify-center py-2 gap-0.5 transition-colors
+            {% if request.path.startswith('/browse') and not request.path.startswith('/player') %}text-dark-secondary{% else %}text-dark-on-surface-variant{% endif %}">
+    <span class="material-symbols-outlined text-2xl {% if request.path.startswith('/browse') and not request.path.startswith('/player') %}fill-icon{% endif %}">home</span>
+    <span class="text-xs font-medium">Home</span>
+  </a>
+  <a href="/starred/"
+     class="flex-1 flex flex-col items-center justify-center py-2 gap-0.5 transition-colors
+            {% if request.path.startswith('/starred') %}text-dark-secondary{% else %}text-dark-on-surface-variant{% endif %}">
+    <span class="material-symbols-outlined text-2xl {% if request.path.startswith('/starred') %}fill-icon{% endif %}">star</span>
+    <span class="text-xs font-medium">Starred</span>
+  </a>
+  <a href="/recent/"
+     class="flex-1 flex flex-col items-center justify-center py-2 gap-0.5 transition-colors
+            {% if request.path.startswith('/recent') %}text-dark-secondary{% else %}text-dark-on-surface-variant{% endif %}">
+    <span class="material-symbols-outlined text-2xl {% if request.path.startswith('/recent') %}fill-icon{% endif %}">schedule</span>
+    <span class="text-xs font-medium">Recent</span>
+  </a>
+</nav>
+
+<!-- ═══════════════════════════════════════════════════
+     MODALS (shared — browse.html extends these)
+═══════════════════════════════════════════════════ -->
+
+<!-- Rename Modal -->
+<div id="renameModal" class="modal-backdrop" onclick="if(event.target===this)closeRenameModal()">
+  <div class="bg-dark-surface-container-high rounded-xl p-6 w-full max-w-sm mx-4 border border-dark-outline-variant/30 shadow-2xl">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="font-headline font-semibold text-dark-on-surface" id="renameModalTitle">Rename Item</h2>
+      <button onclick="closeRenameModal()" class="p-1 rounded-lg hover:bg-dark-surface-container text-dark-on-surface-variant hover:text-dark-on-surface transition-colors">
+        <span class="material-symbols-outlined text-xl">close</span>
+      </button>
     </div>
-    <div class="system-stat">
-      <span class="stat-icon">⏱️</span>
-      <span class="stat-label">Uptime:</span>
-      <span class="stat-value" id="systemUptime">--</span>
+    <div class="mb-4">
+      <label class="block text-sm text-dark-on-surface-variant mb-1.5" for="renameInput">New Name</label>
+      <input type="text" id="renameInput" placeholder="Enter new name…" autocomplete="off"
+             class="w-full bg-dark-surface-container border border-dark-outline-variant/40 rounded-lg px-3 py-2.5 text-sm text-dark-on-surface placeholder-dark-on-surface-variant focus:outline-none focus:border-dark-primary/60 transition-colors">
+    </div>
+    <div class="flex gap-2 justify-end">
+      <button onclick="closeRenameModal()" class="px-4 py-2 rounded-lg text-sm font-medium text-dark-on-surface-variant hover:bg-dark-surface-container transition-colors">Cancel</button>
+      <button onclick="performRename()" class="px-4 py-2 rounded-lg text-sm font-medium bg-dark-primary-container text-dark-on-primary-container hover:opacity-90 transition-opacity">Rename</button>
     </div>
   </div>
+</div>
 
-  <main class="wrapper">
-    {% block content %}{% endblock %}
-  </main>
+<!-- Create Folder Modal -->
+<div id="folderModal" class="modal-backdrop" onclick="if(event.target===this)closeFolderModal()">
+  <div class="bg-dark-surface-container-high rounded-xl p-6 w-full max-w-sm mx-4 border border-dark-outline-variant/30 shadow-2xl">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="font-headline font-semibold text-dark-on-surface flex items-center gap-2">
+        <span class="material-symbols-outlined text-dark-secondary text-xl">create_new_folder</span>
+        New Folder
+      </h2>
+      <button onclick="closeFolderModal()" class="p-1 rounded-lg hover:bg-dark-surface-container text-dark-on-surface-variant hover:text-dark-on-surface transition-colors">
+        <span class="material-symbols-outlined text-xl">close</span>
+      </button>
+    </div>
+    <div class="mb-4">
+      <label class="block text-sm text-dark-on-surface-variant mb-1.5" for="folderNameInput">Folder Name</label>
+      <input type="text" id="folderNameInput" placeholder="Enter folder name…" autocomplete="off"
+             class="w-full bg-dark-surface-container border border-dark-outline-variant/40 rounded-lg px-3 py-2.5 text-sm text-dark-on-surface placeholder-dark-on-surface-variant focus:outline-none focus:border-dark-primary/60 transition-colors">
+    </div>
+    <div class="flex gap-2 justify-end">
+      <button onclick="closeFolderModal()" class="px-4 py-2 rounded-lg text-sm font-medium text-dark-on-surface-variant hover:bg-dark-surface-container transition-colors">Cancel</button>
+      <button onclick="createFolder()" class="px-4 py-2 rounded-lg text-sm font-medium bg-dark-secondary-container text-dark-on-secondary-container hover:opacity-90 transition-opacity">Create</button>
+    </div>
+  </div>
+</div>
 
-  <script src="/static/js/utils.js?v=13"></script>
-  <script src="/static/js/upload.js?v=13"></script>
-  <script src="/static/js/delete.js?v=13"></script>
-  <script src="/static/js/menu.js?v=13"></script>
-  <script src="/static/js/folder.js?v=13"></script>
-  <script src="/static/js/rename.js?v=13"></script>
-  
-  <!-- System Info Auto-Update -->
-  <script>
-    (function() {
-      function updateSystemInfo() {
-        fetch('/api/system-info')
-          .then(response => response.json())
-          .then(data => {
-            // Check if psutil is available
-            if (data.psutil_available === false) {
-              // Show message instead of stats
-              document.getElementById('ramUsage').textContent = 'Install psutil';
-              document.getElementById('storageUsage').textContent = 'pkg install python-psutil';
-              document.getElementById('activeTranscodes').textContent = '0 jobs';
-              document.getElementById('systemUptime').textContent = 'N/A';
-              return;
-            }
-            
-            // RAM
-            const ramPercent = data.memory.percent;
-            const ramUsed = data.memory.used_mb;
-            const ramTotal = data.memory.total_mb;
-            document.getElementById('ramUsage').textContent = 
-              Math.round(ramUsed) + '/' + Math.round(ramTotal) + ' MB (' + ramPercent + '%)';
-            
-            // Storage
-            const storagePercent = data.storage.media_root.percent;
-            const storageFree = data.storage.media_root.free_gb;
-            const storageTotal = data.storage.media_root.total_gb;
-            document.getElementById('storageUsage').textContent = 
-              storageFree.toFixed(1) + '/' + storageTotal.toFixed(1) + ' GB free (' + (100 - storagePercent).toFixed(0) + '%)';
-            
-            // Active transcodes
-            document.getElementById('activeTranscodes').textContent = data.active_transcodes + ' jobs';
-            
-            // Uptime
-            const uptimeHours = data.uptime_hours;
-            let uptimeText;
-            if (uptimeHours < 1) {
-              uptimeText = Math.round(uptimeHours * 60) + 'm';
-            } else if (uptimeHours < 24) {
-              uptimeText = uptimeHours.toFixed(1) + 'h';
-            } else {
-              uptimeText = Math.floor(uptimeHours / 24) + 'd ' + Math.round(uptimeHours % 24) + 'h';
-            }
-            document.getElementById('systemUptime').textContent = uptimeText;
+<!-- Delete Confirmation Modal -->
+<div id="deleteModal" class="modal-backdrop" onclick="if(event.target===this)closeDeleteModal()">
+  <div class="bg-dark-surface-container-high rounded-xl p-6 w-full max-w-sm mx-4 border border-dark-outline-variant/30 shadow-2xl">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="font-headline font-semibold text-dark-error flex items-center gap-2" id="deleteModalTitle">
+        <span class="material-symbols-outlined text-xl">delete</span>
+        Confirm Delete
+      </h2>
+      <button onclick="closeDeleteModal()" class="p-1 rounded-lg hover:bg-dark-surface-container text-dark-on-surface-variant hover:text-dark-on-surface transition-colors">
+        <span class="material-symbols-outlined text-xl">close</span>
+      </button>
+    </div>
+    <p id="deleteModalMessage" class="text-sm text-dark-on-surface mb-3 leading-relaxed"></p>
+    <p class="text-sm text-dark-error font-medium mb-5">⚠️ This action cannot be undone!</p>
+    <div class="flex gap-2 justify-end">
+      <button onclick="closeDeleteModal()" class="px-4 py-2 rounded-lg text-sm font-medium text-dark-on-surface-variant hover:bg-dark-surface-container transition-colors">Cancel</button>
+      <button onclick="performDelete()" class="px-4 py-2 rounded-lg text-sm font-medium bg-dark-error-container text-dark-on-error-container hover:opacity-90 transition-opacity">Delete</button>
+    </div>
+  </div>
+</div>
 
-            // Color coding based on usage
-            const ramEl = document.getElementById('ramUsage');
-            if (ramPercent > 85) {
-              ramEl.style.color = '#ef4444';
-            } else if (ramPercent > 70) {
-              ramEl.style.color = '#f59e0b';
-            } else {
-              ramEl.style.color = '#10b981';
-            }
+<!-- ZIP Progress Notification -->
+<div id="zipNotification" class="zip-notification">
+  <div class="zip-spinner"></div>
+  <div>
+    <div class="zip-notification-title text-sm font-medium text-dark-on-surface">Creating ZIP archive…</div>
+    <div class="zip-notification-subtitle text-xs text-dark-on-surface-variant mt-0.5" id="zipFileName"></div>
+  </div>
+</div>
 
-            const storageEl = document.getElementById('storageUsage');
-            if (storagePercent > 90) {
-              storageEl.style.color = '#ef4444';
-            } else if (storagePercent > 75) {
-              storageEl.style.color = '#f59e0b';
-            } else {
-              storageEl.style.color = '#10b981';
-            }
-          })
-          .catch(err => {
-            console.error('Failed to fetch system info:', err);
-            // Show error state
-            document.getElementById('ramUsage').textContent = 'Error';
-            document.getElementById('storageUsage').textContent = 'Error';
-          });
-      }
-      
-      // Update on load
-      updateSystemInfo();
-      
-      // Update every 5 seconds
-      setInterval(updateSystemInfo, 5000);
-    })();
-  </script>
-  
-  {% block scripts %}{% endblock %}
+<!-- ═══════════════════════════════════════════════════
+     JS INCLUDES
+═══════════════════════════════════════════════════ -->
+<script src="/static/js/utils.js?v=15"></script>
+<script src="/static/js/upload.js?v=15"></script>
+<script src="/static/js/delete.js?v=15"></script>
+<script src="/static/js/menu.js?v=15"></script>
+<script src="/static/js/folder.js?v=15"></script>
+<script src="/static/js/rename.js?v=15"></script>
 
+<!-- System info + search sync -->
+<script src="/static/js/sysinfo.js?v=15"></script>
+
+{% block scripts %}{% endblock %}
 </body>
 </html>

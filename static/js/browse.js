@@ -93,20 +93,46 @@
             icon.classList.remove('pop');
           }, { once: true });
 
-          // Swap icon glyph: star_border (hollow) ↔ star (solid)
-          // Works in ALL browsers regardless of variable font support
           if (data.is_starred) {
+            // Filled star: glyph swap + inline FILL=1 (beats all CSS) + heavy weight + pink
             icon.textContent = 'star';
+            icon.style.fontVariationSettings = "'FILL' 1,'wght' 700,'GRAD' 0,'opsz' 24";
             icon.style.color = '#FFB2B7';
             icon.classList.add('starred');
             element.classList.add('starred');
             element.title = 'Unstar';
           } else {
+            // Hollow star: glyph swap + reset all inline styles
             icon.textContent = 'star_border';
+            icon.style.fontVariationSettings = '';
             icon.style.color = '';
             icon.classList.remove('starred');
             element.classList.remove('starred');
             element.title = 'Star';
+
+            // If we are on the Starred page, remove the unstarred card immediately
+            if (document.body.dataset.currentPath === 'starred' || window.location.pathname.startsWith('/starred')) {
+              var card = element.closest('.gallery-card');
+              if (card) {
+                card.style.transition = 'opacity 180ms ease, transform 180ms ease';
+                card.style.opacity = '0';
+                card.style.transform = 'scale(0.95)';
+                setTimeout(function () {
+                  card.remove();
+                  var remainingFolders = document.querySelectorAll('#section-folders .gallery-card').length;
+                  var remainingFiles = document.querySelectorAll('#section-files .gallery-card').length;
+                  var secFolders = document.getElementById('section-folders');
+                  var secFiles = document.getElementById('section-files');
+                  if (secFolders && remainingFolders === 0) secFolders.remove();
+                  if (secFiles && remainingFiles === 0) secFiles.remove();
+                  var summary = document.getElementById('item-summary');
+                  if (summary) summary.textContent = remainingFolders + ' folders \u00B7 ' + remainingFiles + ' files';
+                  if (remainingFolders === 0 && remainingFiles === 0) {
+                    window.location.reload();
+                  }
+                }, 180);
+              }
+            }
           }
         }
       })
@@ -213,7 +239,9 @@
           var icon = el.querySelector('.star-icon');
           if (icon) {
             icon.textContent = 'star';
+            icon.style.fontVariationSettings = "'FILL' 1,'wght' 700,'GRAD' 0,'opsz' 24";
             icon.style.color = '#FFB2B7';
+            icon.classList.add('starred');
             el.classList.add('starred');
           }
           el.title = 'Unstar';

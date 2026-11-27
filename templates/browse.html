@@ -88,7 +88,7 @@
             data-pre-starred="{{ 'true' if all_starred else 'false' }}"
             onclick="event.stopPropagation(); toggleStar('{{ folder.relative }}', this)"
             title="{{ 'Unstar' if all_starred else 'Star' }}">
-            <span class="material-symbols-outlined text-base star-icon{% if all_starred %} starred{% endif %}">star</span>
+            <span class="material-symbols-outlined text-base star-icon{% if all_starred %} starred{% endif %}"{% if all_starred %} style="color:#FFB2B7"{% endif %}>{{ 'star' if all_starred else 'star_border' }}</span>
           </button>
           <!-- More menu -->
           <button
@@ -190,7 +190,7 @@
             data-pre-starred="{{ 'true' if all_starred else 'false' }}"
             onclick="event.stopPropagation(); toggleStar('{{ file.relative }}', this)"
             title="{{ 'Unstar' if all_starred else 'Star' }}">
-            <span class="material-symbols-outlined text-base star-icon{% if all_starred %} starred{% endif %}">star</span>
+            <span class="material-symbols-outlined text-base star-icon{% if all_starred %} starred{% endif %}"{% if all_starred %} style="color:#FFB2B7"{% endif %}>{{ 'star' if all_starred else 'star_border' }}</span>
           </button>
           <!-- More menu -->
           <button
@@ -244,5 +244,5 @@
   // Pass Jinja2 path to browse.js
   document.body.dataset.currentPath = "{{ path }}";
 </script>
-<script src="/static/js/browse.js?v=16"></script>
+<script src="/static/js/browse.js?v=17"></script>
 {% endblock %}

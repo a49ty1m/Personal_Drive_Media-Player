@@ -90,13 +90,16 @@
           void icon.offsetWidth; // force reflow to restart animation
           icon.classList.add('pop');
 
-          // Toggle filled / unfilled via CSS class (animatable)
+          // Swap icon glyph: star_border (hollow) ↔ star (solid)
+          // This works in ALL browsers regardless of variable font support
           if (data.is_starred) {
-            icon.classList.add('starred');
+            icon.textContent = 'star';
+            icon.style.color = '#FFB2B7';
             element.classList.add('starred');
             element.title = 'Unstar';
           } else {
-            icon.classList.remove('starred');
+            icon.textContent = 'star_border';
+            icon.style.color = '';
             element.classList.remove('starred');
             element.title = 'Star';
           }
@@ -204,7 +207,8 @@
           if (!data.is_starred) return;
           var icon = el.querySelector('.star-icon');
           if (icon) {
-            icon.classList.add('starred');
+            icon.textContent = 'star';
+            icon.style.color = '#FFB2B7';
             el.classList.add('starred');
           }
           el.title = 'Unstar';

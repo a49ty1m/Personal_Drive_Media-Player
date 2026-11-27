@@ -131,6 +131,7 @@ def starred():
         folders=folder_items,
         files=file_items,
         path="starred",
+        all_starred=True,
         upload_enabled=False,
         delete_enabled=config.DELETE_ENABLED,
     )
@@ -186,6 +187,7 @@ def recent():
         folders=[],
         files=file_items,
         path="recent",
+        all_starred=False,
         upload_enabled=False,
         delete_enabled=config.DELETE_ENABLED,
     )

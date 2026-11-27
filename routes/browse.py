@@ -79,6 +79,7 @@ def browse(path: str = ""):
         folders=folder_items,
         files=file_items,
         path=path,
+        all_starred=False,
         upload_enabled=config.UPLOAD_ENABLED,
         delete_enabled=config.DELETE_ENABLED,
     )

@@ -85,12 +85,22 @@
         if (!data.success) return;
         var icon = element.querySelector('.star-icon');
         if (icon) {
-          icon.style.fontVariationSettings = data.is_starred
-            ? "'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24"
-            : "'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24";
-          icon.style.color = data.is_starred ? '#FFB2B7' : '';
+          // Trigger pop animation
+          icon.classList.remove('pop');
+          void icon.offsetWidth; // force reflow to restart animation
+          icon.classList.add('pop');
+
+          // Toggle filled / unfilled via CSS class (animatable)
+          if (data.is_starred) {
+            icon.classList.add('starred');
+            element.classList.add('starred');
+            element.title = 'Unstar';
+          } else {
+            icon.classList.remove('starred');
+            element.classList.remove('starred');
+            element.title = 'Star';
+          }
         }
-        element.title = data.is_starred ? 'Unstar' : 'Star';
       })
       .catch(function (err) { console.error('[browse] toggleStar error:', err); });
   };
@@ -186,14 +196,16 @@
 
     // Use Promise.all for parallel fetching — much faster with many files
     Promise.all(toggles.map(function (el) {
+      // Skip items pre-marked as starred from server (Starred page)
+      if (el.dataset.preStarred === 'true') return Promise.resolve();
       return fetch('/api/is_starred/' + encodeURIComponent(el.dataset.path))
         .then(function (r) { return r.json(); })
         .then(function (data) {
           if (!data.is_starred) return;
           var icon = el.querySelector('.star-icon');
           if (icon) {
-            icon.style.fontVariationSettings = "'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24";
-            icon.style.color = '#FFB2B7';
+            icon.classList.add('starred');
+            el.classList.add('starred');
           }
           el.title = 'Unstar';
         })

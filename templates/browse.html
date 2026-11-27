@@ -6,46 +6,43 @@
   <!-- Breadcrumb + item count -->
   <div class="flex items-center gap-2 flex-wrap">
     {% if parent %}
-    <a href="{{ parent }}"
-      class="flex items-center gap-1 text-dark-on-surface-variant hover:text-dark-on-surface transition-colors">
+    <a href="{{ parent }}" class="flex items-center gap-1 text-dark-on-surface-variant hover:text-dark-on-surface transition-colors">
       <span class="material-symbols-outlined text-lg">arrow_back</span>
     </a>
     <span class="text-dark-outline-variant/60">/</span>
     {% endif %}
-    <a href="/browse/"
-      class="text-sm text-dark-on-surface-variant hover:text-dark-on-surface transition-colors">Home</a>
+    <a href="/browse/" class="text-sm text-dark-on-surface-variant hover:text-dark-on-surface transition-colors">Home</a>
     {% if title and title != 'Home' and title != 'Downloads' %}
     <span class="text-dark-outline-variant/60">/</span>
     <span class="text-sm font-medium text-dark-on-surface truncate max-w-xs">{{ title }}</span>
     {% endif %}
-    <span class="ml-auto text-xs text-dark-on-surface-variant" id="item-summary">{{ folders|length }} folders &middot;
-      {{ files|length }} files</span>
+    <span class="ml-auto text-xs text-dark-on-surface-variant" id="item-summary">{{ folders|length }} folders &middot; {{ files|length }} files</span>
   </div>
 
   <!-- Filter chips -->
   <div class="flex items-center gap-2 overflow-x-auto info-scroll pt-1 pb-1">
     <button data-filter="all" onclick="filterItems('all', this)"
-      class="filter-chip flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors bg-dark-primary-container text-dark-on-primary-container">
+            class="filter-chip flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors bg-dark-primary-container text-dark-on-primary-container">
       <span class="material-symbols-outlined text-sm">apps</span> All
     </button>
     <button data-filter="folder" onclick="filterItems('folder', this)"
-      class="filter-chip flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors bg-dark-surface-container border border-dark-outline-variant/30 text-dark-on-surface-variant hover:text-dark-on-surface hover:bg-dark-surface-container-high">
+            class="filter-chip flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors bg-dark-surface-container border border-dark-outline-variant/30 text-dark-on-surface-variant hover:text-dark-on-surface hover:bg-dark-surface-container-high">
       <span class="material-symbols-outlined text-sm">folder</span> Folders
     </button>
     <button data-filter="video" onclick="filterItems('video', this)"
-      class="filter-chip flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors bg-dark-surface-container border border-dark-outline-variant/30 text-dark-on-surface-variant hover:text-dark-on-surface hover:bg-dark-surface-container-high">
+            class="filter-chip flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors bg-dark-surface-container border border-dark-outline-variant/30 text-dark-on-surface-variant hover:text-dark-on-surface hover:bg-dark-surface-container-high">
       <span class="material-symbols-outlined text-sm">play_circle</span> Videos
     </button>
     <button data-filter="image" onclick="filterItems('image', this)"
-      class="filter-chip flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors bg-dark-surface-container border border-dark-outline-variant/30 text-dark-on-surface-variant hover:text-dark-on-surface hover:bg-dark-surface-container-high">
+            class="filter-chip flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors bg-dark-surface-container border border-dark-outline-variant/30 text-dark-on-surface-variant hover:text-dark-on-surface hover:bg-dark-surface-container-high">
       <span class="material-symbols-outlined text-sm">image</span> Images
     </button>
     <button data-filter="document" onclick="filterItems('document', this)"
-      class="filter-chip flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors bg-dark-surface-container border border-dark-outline-variant/30 text-dark-on-surface-variant hover:text-dark-on-surface hover:bg-dark-surface-container-high">
+            class="filter-chip flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors bg-dark-surface-container border border-dark-outline-variant/30 text-dark-on-surface-variant hover:text-dark-on-surface hover:bg-dark-surface-container-high">
       <span class="material-symbols-outlined text-sm">description</span> Docs
     </button>
     <button data-filter="audio" onclick="filterItems('audio', this)"
-      class="filter-chip flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors bg-dark-surface-container border border-dark-outline-variant/30 text-dark-on-surface-variant hover:text-dark-on-surface hover:bg-dark-surface-container-high">
+            class="filter-chip flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors bg-dark-surface-container border border-dark-outline-variant/30 text-dark-on-surface-variant hover:text-dark-on-surface hover:bg-dark-surface-container-high">
       <span class="material-symbols-outlined text-sm">graphic_eq</span> Audio
     </button>
   </div>
@@ -61,14 +58,17 @@
       {% for folder in folders %}
       <article
         class="gallery-card group relative bg-dark-secondary-container/20 border border-dark-outline-variant/20 rounded-xl overflow-hidden cursor-pointer hover:bg-dark-secondary-container/30 hover:border-dark-secondary/30 transition-all duration-150"
-        data-item-type="folder" data-path="{{ folder.relative }}" onclick="openFolder('{{ folder.url }}')"
+        data-item-type="folder"
+        data-path="{{ folder.relative }}"
+        onclick="openFolder('{{ folder.url }}')"
         id="folder-{{ loop.index }}">
 
         <!-- Folder icon area -->
         <div class="relative h-24 flex items-center justify-center bg-dark-secondary-container/10">
           <span class="material-symbols-outlined fill-icon text-dark-secondary text-5xl">folder</span>
           <!-- Zip button -->
-          <button onclick="event.stopPropagation(); downloadFolder('{{ folder.relative }}', '{{ folder.name }}')"
+          <button
+            onclick="event.stopPropagation(); downloadFolder('{{ folder.relative }}', '{{ folder.name }}')"
             title="Download as ZIP"
             class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 p-1.5 rounded-lg bg-dark-surface-container-high/80 backdrop-blur-sm text-dark-on-surface-variant hover:text-dark-on-surface transition-all">
             <span class="material-symbols-outlined text-base">folder_zip</span>
@@ -84,29 +84,28 @@
           <!-- Star -->
           <button
             class="star-toggle p-1 rounded-lg hover:bg-dark-surface-container text-dark-on-surface-variant hover:text-dark-primary transition-colors{% if all_starred %} starred{% endif %}"
-            data-path="{{ folder.relative }}" data-pre-starred="{{ 'true' if all_starred else 'false' }}"
+            data-path="{{ folder.relative }}"
+            data-pre-starred="{{ 'true' if all_starred else 'false' }}"
             onclick="event.stopPropagation(); toggleStar('{{ folder.relative }}', this)"
             title="{{ 'Unstar' if all_starred else 'Star' }}">
-            <span
-              class="material-symbols-outlined text-base star-icon{% if all_starred %} starred{% endif %}">star</span>
+            <span class="material-symbols-outlined text-base star-icon{% if all_starred %} starred{% endif %}">star</span>
           </button>
           <!-- More menu -->
-          <button onclick="event.stopPropagation(); toggleMenu(event, 'folder-{{ loop.index }}')"
+          <button
+            onclick="event.stopPropagation(); toggleMenu(event, 'folder-{{ loop.index }}')"
             class="p-1 rounded-lg hover:bg-dark-surface-container text-dark-on-surface-variant hover:text-dark-on-surface transition-colors"
             title="More">
             <span class="material-symbols-outlined text-base">more_vert</span>
           </button>
           <!-- Dropdown -->
-          <div
-            class="dropdown-menu absolute right-2 bottom-10 z-20 w-40 bg-dark-surface-container-highest rounded-lg shadow-xl border border-dark-outline-variant/30 py-1 overflow-hidden"
-            id="menu-folder-{{ loop.index }}">
+          <div class="dropdown-menu absolute right-2 bottom-10 z-20 w-40 bg-dark-surface-container-highest rounded-lg shadow-xl border border-dark-outline-variant/30 py-1 overflow-hidden" id="menu-folder-{{ loop.index }}">
             <button onclick="closeMenu(); showRenameModal('{{ folder.relative }}', '{{ folder.name }}', 'folder')"
-              class="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-dark-on-surface hover:bg-dark-surface-container transition-colors">
+                    class="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-dark-on-surface hover:bg-dark-surface-container transition-colors">
               <span class="material-symbols-outlined text-base">edit</span> Rename
             </button>
             <div class="border-t border-dark-outline-variant/20 my-0.5"></div>
             <button onclick="closeMenu(); confirmDelete('{{ folder.relative }}', '{{ folder.name }}', 'folder')"
-              class="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-dark-error hover:bg-dark-error-container/20 transition-colors">
+                    class="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-dark-error hover:bg-dark-error-container/20 transition-colors">
               <span class="material-symbols-outlined text-base">delete</span> Delete
             </button>
           </div>
@@ -125,56 +124,56 @@
       {% for file in files %}
       <article
         class="gallery-card group relative bg-dark-surface-container border border-dark-outline-variant/20 rounded-xl overflow-hidden cursor-pointer hover:bg-dark-surface-container-high hover:border-dark-outline-variant/40 transition-all duration-150"
-        data-item-type="{{ file.extension }}" data-path="{{ file.relative }}" data-extension="{{ file.extension }}"
-        data-is-video="{{ file.is_video }}" data-url="{{ file.url }}" onclick="clickFile('file-{{ loop.index }}')"
+        data-item-type="{{ file.extension }}"
+        data-path="{{ file.relative }}"
+        data-extension="{{ file.extension }}"
+        data-is-video="{{ file.is_video }}"
+        data-url="{{ file.url }}"
+        onclick="clickFile('file-{{ loop.index }}')"
         id="file-{{ loop.index }}">
 
         <!-- Thumbnail / icon area -->
-        <div
-          class="relative h-28 flex items-center justify-center overflow-hidden
+        <div class="relative h-28 flex items-center justify-center overflow-hidden
           {% if file.is_video %}bg-black{% elif file.extension in ['jpg','jpeg','png','gif','webp','bmp'] %}bg-dark-surface-container-lowest{% else %}bg-dark-surface-container-high/40{% endif %}">
 
           {% if file.is_video %}
-          <!-- Video placeholder -->
-          <div class="absolute inset-0 flex items-center justify-center">
-            <div
-              class="w-10 h-10 rounded-full bg-dark-primary-container/30 border border-dark-primary/40 flex items-center justify-center backdrop-blur-sm">
-              <span class="material-symbols-outlined fill-icon text-dark-primary text-2xl">play_circle</span>
+            <!-- Video placeholder -->
+            <div class="absolute inset-0 flex items-center justify-center">
+              <div class="w-10 h-10 rounded-full bg-dark-primary-container/30 border border-dark-primary/40 flex items-center justify-center backdrop-blur-sm">
+                <span class="material-symbols-outlined fill-icon text-dark-primary text-2xl">play_circle</span>
+              </div>
             </div>
-          </div>
-          <!-- Extension badge -->
-          <span
-            class="absolute bottom-2 left-2 px-1.5 py-0.5 bg-black/70 rounded text-xs font-mono text-dark-primary uppercase">{{
-            file.extension }}</span>
+            <!-- Extension badge -->
+            <span class="absolute bottom-2 left-2 px-1.5 py-0.5 bg-black/70 rounded text-xs font-mono text-dark-primary uppercase">{{ file.extension }}</span>
 
           {% elif file.extension in ['jpg', 'jpeg', 'png', 'gif', 'webp'] %}
-          <img src="{{ file.url }}" alt="{{ file.name }}" class="w-full h-full object-cover"
-            onerror="this.parentElement.innerHTML='<span class=\'material-symbols-outlined text-dark-on-surface-variant text-4xl\'>image</span>'">
+            <img src="{{ file.url }}" alt="{{ file.name }}"
+                 class="w-full h-full object-cover"
+                 onerror="this.parentElement.innerHTML='<span class=\'material-symbols-outlined text-dark-on-surface-variant text-4xl\'>image</span>'">
 
           {% elif file.extension in ['mp3', 'flac', 'wav', 'ogg', 'm4a', 'aac', 'opus'] %}
-          <span class="material-symbols-outlined text-dark-tertiary text-5xl">graphic_eq</span>
+            <span class="material-symbols-outlined text-dark-tertiary text-5xl">graphic_eq</span>
 
           {% elif file.extension == 'pdf' %}
-          <span class="material-symbols-outlined text-dark-error text-5xl">picture_as_pdf</span>
+            <span class="material-symbols-outlined text-dark-error text-5xl">picture_as_pdf</span>
 
           {% elif file.extension in ['zip', 'rar', '7z', 'tar', 'gz', 'bz2'] %}
-          <span class="material-symbols-outlined text-dark-secondary text-5xl">inventory_2</span>
+            <span class="material-symbols-outlined text-dark-secondary text-5xl">inventory_2</span>
 
-          {% elif file.extension in ['py', 'js', 'ts', 'html', 'css', 'json', 'xml', 'yaml', 'yml', 'sh', 'bash',
-          'conf', 'ini', 'cfg'] %}
-          <span class="material-symbols-outlined text-dark-tertiary text-5xl">code</span>
+          {% elif file.extension in ['py', 'js', 'ts', 'html', 'css', 'json', 'xml', 'yaml', 'yml', 'sh', 'bash', 'conf', 'ini', 'cfg'] %}
+            <span class="material-symbols-outlined text-dark-tertiary text-5xl">code</span>
 
           {% elif file.extension in ['md', 'txt', 'doc', 'docx', 'odt', 'rtf', 'csv', 'log'] %}
-          <span class="material-symbols-outlined text-dark-on-surface-variant text-5xl">description</span>
+            <span class="material-symbols-outlined text-dark-on-surface-variant text-5xl">description</span>
 
           {% elif file.extension in ['srt', 'vtt', 'ass', 'ssa'] %}
-          <span class="material-symbols-outlined text-dark-secondary text-5xl">subtitles</span>
+            <span class="material-symbols-outlined text-dark-secondary text-5xl">subtitles</span>
 
           {% elif file.extension in ['apk', 'ipa'] %}
-          <span class="material-symbols-outlined text-dark-tertiary text-5xl">android</span>
+            <span class="material-symbols-outlined text-dark-tertiary text-5xl">android</span>
 
           {% else %}
-          <span class="material-symbols-outlined text-dark-on-surface-variant text-5xl">{{ file.icon }}</span>
+            <span class="material-symbols-outlined text-dark-on-surface-variant text-5xl">{{ file.icon }}</span>
           {% endif %}
         </div>
 
@@ -187,33 +186,32 @@
           <!-- Star -->
           <button
             class="star-toggle p-1 rounded-lg hover:bg-dark-surface-container-high text-dark-on-surface-variant hover:text-dark-primary transition-colors{% if all_starred %} starred{% endif %}"
-            data-path="{{ file.relative }}" data-pre-starred="{{ 'true' if all_starred else 'false' }}"
+            data-path="{{ file.relative }}"
+            data-pre-starred="{{ 'true' if all_starred else 'false' }}"
             onclick="event.stopPropagation(); toggleStar('{{ file.relative }}', this)"
             title="{{ 'Unstar' if all_starred else 'Star' }}">
-            <span
-              class="material-symbols-outlined text-base star-icon{% if all_starred %} starred{% endif %}">star</span>
+            <span class="material-symbols-outlined text-base star-icon{% if all_starred %} starred{% endif %}">star</span>
           </button>
           <!-- More menu -->
-          <button onclick="event.stopPropagation(); toggleMenu(event, 'file-{{ loop.index }}')"
+          <button
+            onclick="event.stopPropagation(); toggleMenu(event, 'file-{{ loop.index }}')"
             class="p-1 rounded-lg hover:bg-dark-surface-container-high text-dark-on-surface-variant hover:text-dark-on-surface transition-colors"
             title="More">
             <span class="material-symbols-outlined text-base">more_vert</span>
           </button>
           <!-- Dropdown -->
-          <div
-            class="dropdown-menu absolute right-2 bottom-10 z-20 w-44 bg-dark-surface-container-highest rounded-lg shadow-xl border border-dark-outline-variant/30 py-1 overflow-hidden"
-            id="menu-file-{{ loop.index }}">
+          <div class="dropdown-menu absolute right-2 bottom-10 z-20 w-44 bg-dark-surface-container-highest rounded-lg shadow-xl border border-dark-outline-variant/30 py-1 overflow-hidden" id="menu-file-{{ loop.index }}">
             <button onclick="closeMenu(); downloadFile('{{ file.relative }}', '{{ file.name }}')"
-              class="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-dark-on-surface hover:bg-dark-surface-container transition-colors">
+                    class="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-dark-on-surface hover:bg-dark-surface-container transition-colors">
               <span class="material-symbols-outlined text-base">download</span> Download
             </button>
             <button onclick="closeMenu(); showRenameModal('{{ file.relative }}', '{{ file.name }}', 'file')"
-              class="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-dark-on-surface hover:bg-dark-surface-container transition-colors">
+                    class="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-dark-on-surface hover:bg-dark-surface-container transition-colors">
               <span class="material-symbols-outlined text-base">edit</span> Rename
             </button>
             <div class="border-t border-dark-outline-variant/20 my-0.5"></div>
             <button onclick="closeMenu(); confirmDelete('{{ file.relative }}', '{{ file.name }}', 'file')"
-              class="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-dark-error hover:bg-dark-error-container/20 transition-colors">
+                    class="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-dark-error hover:bg-dark-error-container/20 transition-colors">
               <span class="material-symbols-outlined text-base">delete</span> Delete
             </button>
           </div>
@@ -233,7 +231,7 @@
     <p class="text-dark-on-surface-variant font-medium">This folder is empty</p>
     {% if upload_enabled %}
     <button onclick="showUploadModal()"
-      class="flex items-center gap-2 px-4 py-2 rounded-lg bg-dark-primary-container text-dark-on-primary-container text-sm font-medium hover:opacity-90 transition-opacity">
+            class="flex items-center gap-2 px-4 py-2 rounded-lg bg-dark-primary-container text-dark-on-primary-container text-sm font-medium hover:opacity-90 transition-opacity">
       <span class="material-symbols-outlined text-lg">upload</span> Upload Files
     </button>
     {% endif %}

@@ -85,21 +85,26 @@
         if (!data.success) return;
         var icon = element.querySelector('.star-icon');
         if (icon) {
-          // Trigger pop animation
+          // Pop animation — remove first to allow replay on repeated clicks
           icon.classList.remove('pop');
-          void icon.offsetWidth; // force reflow to restart animation
+          void icon.offsetWidth; // force reflow so animation restarts
           icon.classList.add('pop');
+          icon.addEventListener('animationend', function () {
+            icon.classList.remove('pop');
+          }, { once: true });
 
           // Swap icon glyph: star_border (hollow) ↔ star (solid)
-          // This works in ALL browsers regardless of variable font support
+          // Works in ALL browsers regardless of variable font support
           if (data.is_starred) {
             icon.textContent = 'star';
             icon.style.color = '#FFB2B7';
+            icon.classList.add('starred');
             element.classList.add('starred');
             element.title = 'Unstar';
           } else {
             icon.textContent = 'star_border';
             icon.style.color = '';
+            icon.classList.remove('starred');
             element.classList.remove('starred');
             element.title = 'Star';
           }
